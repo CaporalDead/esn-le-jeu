@@ -1,4 +1,6 @@
 composer.phar
+src/ESNLeJeu/Entity/User.php
+src/ESNLeJeu/Logs/suivi.log
 vendor/
 .idea/
 

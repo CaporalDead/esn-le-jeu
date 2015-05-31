@@ -1,7 +1,6 @@
 ﻿<?php
 
 use Jhiino\ESNLeJeu\Client;
-use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Entity\Tender;
 use Jhiino\ESNLeJeu\Entity\User;

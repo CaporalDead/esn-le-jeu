@@ -1,8 +1,7 @@
 {
     "autoload": {
         "psr-4": {
-            "Devitek\\CSManager\\": "src/CSManager",
-			"Jhiino\\ESNLeJeu\\": "src/Jhiino"
+			"Jhiino\\ESNLeJeu\\": "src/ESNLeJeu"
         }
     },
     "require": {
