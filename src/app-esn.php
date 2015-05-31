@@ -62,7 +62,7 @@ if (Scheduler::isBusinessTime()) {
     print(PHP_EOL . 'Recrutements : ' . count($response['newApplicants']));
 }
 
-print(PHP_EOL . '--------Fin de traitement--------');
+print(PHP_EOL . '--------Fin de traitement--------' . PHP_EOL);
 
 
 
