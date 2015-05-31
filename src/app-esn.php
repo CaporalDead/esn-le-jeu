@@ -1,7 +1,6 @@
 ﻿<?php
 
 use Jhiino\ESNLeJeu\Client;
-use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Entity\Tender;
 use Jhiino\ESNLeJeu\Entity\User;
@@ -63,7 +62,7 @@ if (Scheduler::isBusinessTime()) {
     print(PHP_EOL . 'Recrutements : ' . count($response['newApplicants']));
 }
 
-print(PHP_EOL . '--------Fin de traitement--------');
+print(PHP_EOL . '--------Fin de traitement--------' . PHP_EOL);
 
 
 
