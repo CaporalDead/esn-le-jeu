@@ -1,1 +1,1 @@
-php /share/Web/Bot/esn-le-jeu_v2/src/app-esn.php >> /share/Web/Bot/esn-le-jeu_v2/src/ESNLeJeu/Logs/suivi.log
+php /share/Web/Bot/esn-le-jeu/src/app-esn.php >> /share/Web/Bot/esn-le-jeu/src/ESNLeJeu/Logs/suivi.log

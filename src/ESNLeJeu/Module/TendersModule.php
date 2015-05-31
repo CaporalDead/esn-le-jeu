@@ -30,7 +30,6 @@ class TendersModule extends Module
 
         foreach (CareerProfiles::getArrayOf() as $useless => $careerProfile) {
             $page                    = 1;
-            $tenders[$careerProfile] = [];
 
             do {
                 $url  = vsprintf(self::URI . '?C=%s&P=%s', [$careerProfile, $page]);
@@ -49,10 +48,11 @@ class TendersModule extends Module
                         if ('répondu' != trim($child->filter('td:nth-child(5)')->html())
                             && null == $child->filter('td:nth-child(3)')->filter('span.ui-icon-locked')->getNode(0)
                         ) {
-
                             $tender = self::parseFromHtml($child, $careerProfile, $page);
 
-                            $tenders[$careerProfile][$tender->id] = $tender;
+                            if ($tender instanceof Tender && $tender->weeks >= Tender::MIN_WEEKS) {
+                                $tenders[] = $tender;
+                            }
                         }
                     }
                 );
@@ -97,72 +97,77 @@ class TendersModule extends Module
     }
 
     /**
+     * Répondre aux appels d'offres
      * @param array $tenders
      *
      * @return array
      */
-    public function bidOnTenders(array &$tenders = [])
+    public function bidOnTenders(array $tenders = [])
     {
         $bids          = [];
         $allIdles      = [];
         $allApplicants = [];
 
-        // On travaille par profil
-        foreach (CareerProfiles::getArrayOf() as $useless => $careerProfile) {
+        do {
+            // Indexer le tableau
+            $tenders = array_values($tenders);
+            // Sélection d'une offre au hasard
             /** @var Tender $tender */
-            foreach ($tenders[$careerProfile] as $tender) {
-                // Contrôler le nombre minimal de semaines
-                if ($tender->weeks >= Tender::MIN_WEEKS) {
-                    // 1 - Pour chaque offre, essayer de placer un idle
+            $key = array_rand($tenders, 1);
+            $tender = $tenders[$key];
+
+            // Contrôler le nombre minimal de semaines
+            if ($tender->weeks >= Tender::MIN_WEEKS) {
+                // 1 - Pour chaque offre, essayer de placer un idle
+                /** @var Ressource[] $idles */
+                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender->careerProfile, $tender);
+                $allIdles += $idles;
+
+                /** @var Ressource $ressource */
+                foreach ($idles as $ressource) {
+                    $this->evaluateMargin($tender, $ressource);
+                }
+
+                // 2 - Sinon essayer de recruter
+                if (null == $tender->ressource && self::HIRE) {
                     /** @var Ressource[] $idles */
-                    $idles = EmployeesModule::idlesForCareerProfile($this->client, $careerProfile, $tender);
-                    $allIdles += $idles;
+                    $newApplicants = EmployeesModule::applicantsForCareerProfile($this->client, $tender->careerProfile);
 
-                    /** @var Ressource $ressource */
-                    foreach ($idles as $ressource) {
-                        $this->evaluateMargin($tender, $ressource);
+                    /** @var NewApplicant $newApplicant */
+                    foreach ($newApplicants as $newApplicant) {
+                        $this->evaluateMargin($tender, $newApplicant);
                     }
 
-                    // 2 - Sinon essayer de recruter
-                    if (null == $tender->ressource && self::HIRE) {
-                        /** @var Ressource[] $idles */
-                        $newApplicants = EmployeesModule::applicantsForCareerProfile($this->client, $careerProfile);
+                    // Recrutement
+                    if ($tender->ressource instanceof NewApplicant) {
+                        $applicant = EmployeesModule::hire($this->client, $newApplicant, $tender);
 
-                        /** @var NewApplicant $newApplicant */
-                        foreach ($newApplicants as $newApplicant) {
-                            $this->evaluateMargin($tender, $newApplicant);
+                        // Recrutement réussi ?
+                        if ($applicant instanceof Applicant) {
+                            $tender->ressource = $applicant;
+                            $allApplicants[]   = $applicant;
+                        } else {
+                            $tender->margin    = 0.0;
+                            $tender->ressource = null;
                         }
-
-                        // Recrutement
-                        if ($tender->ressource instanceof NewApplicant) {
-                            $applicant = EmployeesModule::hire($this->client, $newApplicant, $tender);
-
-                            // Recrutement réussi ?
-                            if ($applicant instanceof Applicant) {
-                                $tender->ressource = $applicant;
-                                $allApplicants[]   = $applicant;
-                            } else {
-                                $tender->margin    = 0.0;
-                                $tender->ressource = null;
-                            }
-                        }
-                    }
-
-                    // 3 - Envoyer l'offre
-                    if (null != $tender->ressource) {
-                        if ($this->bid($tender)) {
-                            // Supprimer la ressource des ressources disponibles
-                            unset($idles[$tender->ressource->id]);
-
-                            // Stats
-                            $bids[] = $tender;
-                        }
-
-                        Scheduler::waitBeforeNextBid();
                     }
                 }
+
+                // 3 - Envoyer l'offre
+                if (null != $tender->ressource) {
+                    if ($this->bid($tender)) {
+                        // Stats
+                        $bids[] = $tender;
+                    }
+
+                    Scheduler::waitBeforeNextBid();
+                }
             }
-        }
+
+            // Supprimer l'offre du tableau
+            unset($tenders[$key]);
+
+        } while(count($bids) < Tender::MAX_BID_PER_HOUR && ! empty($tenders));
 
         return [
             'bids'          => $bids,

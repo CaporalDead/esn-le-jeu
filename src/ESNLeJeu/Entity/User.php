@@ -2,9 +2,9 @@
 
 class User
 {
-    const LOGIN    = 'tbertrand@astek.fr';
+    const LOGIN    = '';
     const PASSWORD = '';
-    const ESN_NAME = 'Gimm3 Th3 C4$h MF';
+    const ESN_NAME = '';
     const EMAIL    = '';
 
 }

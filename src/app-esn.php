@@ -3,8 +3,10 @@
 use Jhiino\ESNLeJeu\Client;
 use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
+use Jhiino\ESNLeJeu\Entity\Tender;
 use Jhiino\ESNLeJeu\Entity\User;
 use Jhiino\ESNLeJeu\Wrapper;
+
 require(dirname(__FILE__) . '/../vendor/autoload.php');
 set_time_limit(3500);
 
@@ -49,10 +51,7 @@ if (Scheduler::isBusinessTime()) {
 
     // Récupérer tous les appels d'offres
     $tenders = $modules->tenders()->tenders();
-
-    foreach ($tenders as $careerProfile => $aTenders) {
-        print(PHP_EOL . 'Appels d\'offres (' . CareerProfiles::getName($careerProfile) . ') : ' . count($aTenders));
-    }
+    print(PHP_EOL . 'Appels d\'offres selon critères (>= ' . Tender::MIN_WEEKS . ' semaines) : ' . count($tenders));
 
     // Tempo random
     Scheduler::waitBeforeNextStep();
