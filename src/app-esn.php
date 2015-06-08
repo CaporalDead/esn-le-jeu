@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Jhiino\ESNLeJeu\Client;
 use Jhiino\ESNLeJeu\Entity\Scheduler;

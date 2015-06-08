@@ -1,6 +1,7 @@
 <?php namespace Jhiino\ESNLeJeu\Module;
 
 use Exception;
+use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Symfony\Component\DomCrawler\Crawler;
 
 class ComplaintsModule extends Module
@@ -10,15 +11,22 @@ class ComplaintsModule extends Module
      */
     const URI = '/doleances.php';
 
+    const TEXT_RESIGNATION  = 'Démission';
+    const TEXT_DISAPPOINTED = 'Déçu';
+    const TEXT_REFRESHED    = 'Remotivé';
+
     public function flannel()
     {
         $positif = 0;
         $negatif = 0;
+        $page    = 1;
 
         do {
-            $html = $this->client->getConnection()->get(self::URI)->send()->getBody(true);
+            $url  = vsprintf('%s?P=%s', [self::URI, $page]);
+            $body = $this->client->getConnection()->get($url)->send()->getBody(true);
 
-            $crawler  = new Crawler($html);
+            $crawler = new Crawler($body);
+
             $children = $crawler->filter(self::CSS_FILTER);
 
             if (0 == $children->count()) {
@@ -28,38 +36,51 @@ class ComplaintsModule extends Module
             $children->each(
                 function (Crawler $child) use (&$positif, &$negatif) {
 
-                    // Faire apparaitre le bouton
-                    $formInput = [
-                        'a'      => 'D',
-                        'id_r'   => filter_var(trim(substr($child->attr('id'), 2)), FILTER_SANITIZE_NUMBER_INT),
-                        'numrow' => rand(1, 30)
-                    ];
+                    $mood = filter_var($child->filter('td:nth-child(3)')->html(), FILTER_SANITIZE_STRING);
 
-                    $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $formInput)->send();
-                    usleep(rand(500, 999));
+                    // Si non traité
+                    if (! in_array($mood, [self::TEXT_RESIGNATION, self::TEXT_DISAPPOINTED, self::TEXT_REFRESHED])) {
+                        $numrow = rand(1, 30);
 
-                    // Baratiner
-                    $formInput = [
-                        'a'      => 'DB',
-                        'id_r'   => filter_var(trim(substr($child->attr('id'), 2)), FILTER_SANITIZE_NUMBER_INT),
-                        'numrow' => rand(1, 30)
-                    ];
+                        // Faire apparaitre les bouton
+                        $formInput = [
+                            'a'      => 'D',
+                            'id_r'   => filter_var(trim(substr($child->attr('id'), 2)), FILTER_SANITIZE_NUMBER_INT),
+                            'numrow' => $numrow
+                        ];
 
-                    $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $formInput)->send()->getBody(true);
-                    usleep(rand(500, 999));
+                        $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $formInput)->send();
 
-                    // Traitement de la réponse pour les statistiques
-                    $crawler = new Crawler($html);
+                        // Tempo random
+                        Scheduler::waitBeforeNextComplaint();
 
-                    if (null != $crawler->filter('span.positif')->getNode(0)) {
-                        $positif += 1;
-                    } elseif (null != $crawler->filter('span.negatif')->getNode(0)) {
-                        $negatif += 1;
-                    } else {
-                        throw new Exception('Erreur de baratin!');
+                        // Baratiner
+                        $formInput = [
+                            'a'      => 'DB',
+                            'id_r'   => filter_var(trim(substr($child->attr('id'), 2)), FILTER_SANITIZE_NUMBER_INT),
+                            'numrow' => $numrow
+                        ];
+
+                        $body = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $formInput)->send()->getBody(true);
+
+                        // Tempo random
+                        Scheduler::waitBeforeNextComplaint();
+
+                        // Traitement de la réponse pour les statistiques
+                        $crawler = new Crawler($body);
+
+                        if (null != $crawler->filter('span.positif')->getNode(0)) {
+                            $positif += 1;
+                        } elseif (null != $crawler->filter('span.negatif')->getNode(0)) {
+                            $negatif += 1;
+                        } else {
+                            throw new Exception('Erreur de baratin!');
+                        }
                     }
                 }
             );
+
+            $page++;
         } while (true);
 
         return [

@@ -2,9 +2,9 @@
 
 class Tender
 {
-    const MIN_WEEKS           = 1;
-    const MIN_INTEREST_MARGIN = 0.10;
-    const TRADE_PROMOTION     = 0.92;
+    const MIN_WEEKS           = 6;
+    const MIN_INTEREST_MARGIN = 0.25;
+    const TRADE_PROMOTION     = 0.95;
     const MAX_BID_PER_HOUR    = 50;
 
     /**

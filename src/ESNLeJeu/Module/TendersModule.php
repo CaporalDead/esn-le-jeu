@@ -29,10 +29,10 @@ class TendersModule extends Module
         $tenders = [];
 
         foreach (CareerProfiles::getArrayOf() as $useless => $careerProfile) {
-            $page                    = 1;
+            $page = 1;
 
             do {
-                $url  = vsprintf(self::URI . '?C=%s&P=%s', [$careerProfile, $page]);
+                $url  = vsprintf('%s?C=%s&P=%s', [self::URI, $careerProfile, $page]);
                 $body = $this->client->getConnection()->get($url)->send()->getBody(true);
 
                 $crawler = new Crawler($body);
@@ -98,6 +98,7 @@ class TendersModule extends Module
 
     /**
      * Répondre aux appels d'offres
+     *
      * @param array $tenders
      *
      * @return array
@@ -113,7 +114,7 @@ class TendersModule extends Module
             $tenders = array_values($tenders);
             // Sélection d'une offre au hasard
             /** @var Tender $tender */
-            $key = array_rand($tenders, 1);
+            $key    = array_rand($tenders, 1);
             $tender = $tenders[$key];
 
             // Contrôler le nombre minimal de semaines
@@ -166,8 +167,7 @@ class TendersModule extends Module
 
             // Supprimer l'offre du tableau
             unset($tenders[$key]);
-
-        } while(count($bids) < Tender::MAX_BID_PER_HOUR && ! empty($tenders));
+        } while (count($bids) < Tender::MAX_BID_PER_HOUR && ! empty($tenders));
 
         return [
             'bids'          => $bids,

@@ -38,7 +38,7 @@ class Scheduler
         $stopTime = new DateTime();
         $stopTime->setTime(22, 59, 59);
 
-        return ($now >= $startTime) || ($now <= $stopTime);
+        return ($now >= $startTime) && ($now <= $stopTime);
     }
 
     public static function waitForStart()
@@ -62,5 +62,10 @@ class Scheduler
         } else {
             usleep(10000);
         }
+    }
+
+    public static function waitBeforeNextComplaint()
+    {
+        usleep(rand(100000, 456789));
     }
 } 
