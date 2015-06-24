@@ -2,8 +2,9 @@
 
 class User
 {
-    const LOGIN    = 'fuckmail@voila.fr';
-    const PASSWORD = 'azerty';
-    const ESN_NAME = 'Plopido';
-    const EMAIL    = 'fuckmail@voila.fr';
+    const LOGIN    = 'tbertrand@astek.fr';
+    const PASSWORD = '';
+    const ESN_NAME = 'Gimm3 Th3 C4$h MF';
+    const EMAIL    = 'el_tiob@hotmail.com';
+
 }

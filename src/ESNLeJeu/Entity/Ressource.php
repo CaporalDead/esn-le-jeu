@@ -61,11 +61,11 @@ abstract class Ressource
         $this->type          = $type;
 
         if (null != $pay && filter_var($pay, FILTER_VALIDATE_INT)) {
-            $this->pay  = $pay;
-            $this->cost = round($pay / self::WORKED_DAYS_A_YEAR);
+            $this->pay  = intval($pay);
+            $this->cost = intval(round($pay / self::WORKED_DAYS_A_YEAR));
         } elseif (null != $cost && filter_var($cost, FILTER_VALIDATE_INT)) {
-            $this->cost = $cost;
-            $this->pay  = round($cost * self::WORKED_DAYS_A_YEAR);
+            $this->cost = intval($cost);
+            $this->pay  = intval(round($cost * self::WORKED_DAYS_A_YEAR));
         } else {
             throw new Exception('Error on creating ressource : unable to get pay or cost.');
         }

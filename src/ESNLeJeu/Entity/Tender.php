@@ -2,11 +2,6 @@
 
 class Tender
 {
-    const MIN_WEEKS           = 6;
-    const MIN_INTEREST_MARGIN = 0.25;
-    const TRADE_PROMOTION     = 0.95;
-    const MAX_BID_PER_HOUR    = 50;
-
     /**
      * @var int : id de l'appel d'offre
      */
@@ -67,7 +62,7 @@ class Tender
         $this->careerProfile    = $careerProfile;
         $this->weeks            = $weeks;
         $this->budget           = $budget;
-        $this->businessProposal = round($budget * self::TRADE_PROMOTION);
+        $this->businessProposal = round($budget * Options::BID_TRADE_PROMOTION);
         $this->page             = $page;
     }
 }

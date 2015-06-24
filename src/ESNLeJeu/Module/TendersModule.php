@@ -3,18 +3,15 @@
 use Jhiino\ESNLeJeu\Entity\Applicant;
 use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\NewApplicant;
+use Jhiino\ESNLeJeu\Entity\Options;
 use Jhiino\ESNLeJeu\Entity\Ressource;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Entity\Tender;
+use Jhiino\ESNLeJeu\Helper\Node;
 use Symfony\Component\DomCrawler\Crawler;
 
 class TendersModule extends Module
 {
-    /**
-     * @var string
-     */
-    const HIRE = true;
-
     /**
      * @var string
      */
@@ -28,7 +25,7 @@ class TendersModule extends Module
         /** @var Tender[] $tenders */
         $tenders = [];
 
-        foreach (CareerProfiles::getArrayOf() as $useless => $careerProfile) {
+        foreach (CareerProfiles::getArrayOf() as $careerProfile) {
             $page = 1;
 
             do {
@@ -45,12 +42,13 @@ class TendersModule extends Module
 
                 $children->each(
                     function (Crawler $child) use (&$tenders, $careerProfile, $page) {
-                        if ('répondu' != trim($child->filter('td:nth-child(5)')->html())
-                            && null == $child->filter('td:nth-child(3)')->filter('span.ui-icon-locked')->getNode(0)
+                        // Si le bouton voir existe et qu'il n'y a pas de cadenas
+                        if (Node::buttonExists($child, 'td:nth-child(5) > a.btn', 'Voir')
+                            && ! Node::nodeExists($child, 'td:nth-child(3) > span.ui-icon-locked')
                         ) {
                             $tender = self::parseFromHtml($child, $careerProfile, $page);
 
-                            if ($tender instanceof Tender && $tender->weeks >= Tender::MIN_WEEKS) {
+                            if ($tender instanceof Tender && $tender->weeks >= Options::BID_MIN_WEEKS) {
                                 $tenders[] = $tender;
                             }
                         }
@@ -90,7 +88,27 @@ class TendersModule extends Module
         // Calcul de la marge
         $margin = round(($tender->businessProposal - $ressource->cost) / $tender->businessProposal, 5);
 
-        if ($margin >= Tender::MIN_INTEREST_MARGIN && $margin > $tender->margin) {
+        // Debug
+        if (Options::DEVELOPMENT) {
+            print(vsprintf('%sOffre[%s] : %s, Ressource[%s] : %s, Marge brute[%s], Marge nette[%s]',
+                [
+                    PHP_EOL,
+                    $tender->id,
+                    $tender->businessProposal,
+                    $ressource->id,
+                    $ressource->cost,
+                    $margin,
+                    round($margin - 0.21, 5)
+                ]
+            ));
+        }
+
+        if ($margin >= Options::BID_MIN_INTEREST_MARGIN && $margin > $tender->margin) {
+            // Debug
+            if (Options::DEVELOPMENT) {
+                print(PHP_EOL . 'Nouvelle marge : ' . $margin);
+            }
+
             $tender->margin    = $margin;
             $tender->ressource = $ressource;
         }
@@ -118,10 +136,10 @@ class TendersModule extends Module
             $tender = $tenders[$key];
 
             // Contrôler le nombre minimal de semaines
-            if ($tender->weeks >= Tender::MIN_WEEKS) {
+            if ($tender->weeks >= Options::BID_MIN_WEEKS) {
                 // 1 - Pour chaque offre, essayer de placer un idle
                 /** @var Ressource[] $idles */
-                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender->careerProfile, $tender);
+                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender);
                 $allIdles += $idles;
 
                 /** @var Ressource $ressource */
@@ -130,7 +148,7 @@ class TendersModule extends Module
                 }
 
                 // 2 - Sinon essayer de recruter
-                if (null == $tender->ressource && self::HIRE) {
+                if (null == $tender->ressource && Options::HIRE) {
                     /** @var Ressource[] $idles */
                     $newApplicants = EmployeesModule::applicantsForCareerProfile($this->client, $tender->careerProfile);
 
@@ -141,7 +159,7 @@ class TendersModule extends Module
 
                     // Recrutement
                     if ($tender->ressource instanceof NewApplicant) {
-                        $applicant = EmployeesModule::hire($this->client, $newApplicant, $tender);
+                        $applicant = EmployeesModule::hire($this->client, $tender->ressource, $tender);
 
                         // Recrutement réussi ?
                         if ($applicant instanceof Applicant) {
@@ -167,7 +185,7 @@ class TendersModule extends Module
 
             // Supprimer l'offre du tableau
             unset($tenders[$key]);
-        } while (count($bids) < Tender::MAX_BID_PER_HOUR && ! empty($tenders));
+        } while (count($bids) < Options::BID_MAX_BID_PER_HOUR && ! empty($tenders));
 
         return [
             'bids'          => $bids,
@@ -184,21 +202,14 @@ class TendersModule extends Module
      */
     private function bid(Tender $tender)
     {
+        $return = false;
+
         $ressource = $tender->ressource;
 
-        if ($ressource instanceof Ressource
-            && null != $ressource->id
-            && $tender->margin >= Tender::MIN_INTEREST_MARGIN
+        if ($ressource instanceof Ressource && null != $ressource->id && $tender->margin >= Options::BID_MIN_INTEREST_MARGIN
         ) {
-
-            // Se rendre sur la page en question
-//        $url  = vsprintf(self::URI . '?C=%s&P=%s', [$tender->careerProfile, $tender->page]);
-//        $body = $this->client->getConnection()->get($url)->send()->getBody(true);
-//        $crawler = new Crawler($body);
-
             $post = [
                 'a'        => 'AOC',
-//            'colorchange' => rawurldecode($crawler->filter('.colorchange')->html()),
                 'id_ao'    => $tender->id,
                 'numrow'   => rand(1, 30),
                 'tarifv'   => $tender->businessProposal,
@@ -209,17 +220,29 @@ class TendersModule extends Module
             $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
             $crawler = new Crawler($body);
 
-            if ($crawler->filter('td.pannel_e > b')->count()) {
-                if (0 === stripos($crawler->filter('td.pannel_e > b')->html(), 'Bravo')) {
-                    return true;
-                }
-            } else {
-                print(PHP_EOL . 'Une erreur est survenue dans le placement d\'une ressource : ' . PHP_EOL);
-                var_dump($tender);
-                var_dump($crawler);
+            $node = Node::nodeExists($crawler, 'td.pannel_e > b');
+
+            if ($node && 0 === stripos($node->html(), 'Bravo')) {
+                $return = true;
             }
         }
 
-        return false;
+        // Debug
+        if (Options::DEVELOPMENT) {
+            $msg = ($return) ? 'Placement OK' : 'Placement KO';
+
+            print(vsprintf('%s%s : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]',
+                [
+                    PHP_EOL,
+                    $msg,
+                    $tender->id,
+                    $tender->ressource->id,
+                    $tender->careerProfile,
+                    $tender->margin
+                ]
+            ));
+        }
+
+        return $return;
     }
 }

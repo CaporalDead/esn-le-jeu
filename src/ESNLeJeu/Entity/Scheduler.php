@@ -4,10 +4,8 @@ use DateTime;
 
 class Scheduler
 {
-    const PROD_MODE = true;
-
     /**
-     * Baratin entre 6h et 8h du matin
+     * Baratin
      * @return bool
      */
     public static function isFlannelTime()
@@ -21,11 +19,28 @@ class Scheduler
         $stopTime = new DateTime();
         $stopTime->setTime(11, 59, 59);
 
-        return ($now >= $startTime) && ($now <= $stopTime);
+        return Options::FLANNEL && ($now >= $startTime) && ($now <= $stopTime);
     }
 
     /**
-     * Réponses aux appels d'offres entre 6h et 23h
+     * Audit
+     * @return bool
+     */
+    public static function isAuditTime()
+    {
+        $now = new DateTime();
+
+        $startTime = new DateTime();
+        $startTime->setTime(6, 0, 0);
+
+        $stopTime = new DateTime();
+        $stopTime->setTime(6, 59, 59);
+
+        return (($now >= $startTime) && ($now <= $stopTime));
+    }
+
+    /**
+     * Réponses aux appels d'offres
      * @return bool
      */
     public static function isBusinessTime()
@@ -36,29 +51,29 @@ class Scheduler
         $startTime->setTime(6, 0, 0);
 
         $stopTime = new DateTime();
-        $stopTime->setTime(22, 59, 59);
+        $stopTime->setTime(23, 59, 59);
 
-        return ($now >= $startTime) && ($now <= $stopTime);
+        return (($now >= $startTime) && ($now <= $stopTime)) || Options::DEVELOPMENT;
     }
 
     public static function waitForStart()
     {
-        if (self::PROD_MODE) {
-            sleep(rand(1, 300));
+        if (! Options::DEVELOPMENT) {
+            sleep(rand(1, 99));
         }
     }
 
     public static function waitBeforeNextStep()
     {
-        if (self::PROD_MODE) {
-            sleep(rand(10, 60));
+        if (! Options::DEVELOPMENT) {
+            sleep(rand(1, 29));
         }
     }
 
     public static function waitBeforeNextBid()
     {
-        if (self::PROD_MODE) {
-            usleep(rand(876543, 2598765));
+        if (! Options::DEVELOPMENT) {
+            usleep(rand(876543, 1598765));
         } else {
             usleep(10000);
         }
@@ -66,6 +81,11 @@ class Scheduler
 
     public static function waitBeforeNextComplaint()
     {
-        usleep(rand(100000, 456789));
+        if (! Options::DEVELOPMENT) {
+            usleep(rand(100000, 456789));
+        } else {
+            usleep(10000);
+        }
+
     }
 } 

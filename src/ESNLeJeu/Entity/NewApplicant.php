@@ -25,6 +25,7 @@ class NewApplicant extends Applicant
     public function __construct($id, $name, $careerProfile, $type, $pay = null, $cost = null, $idTemp = null)
     {
         parent::__construct($id, $name, $careerProfile, $type, $pay, $cost);
+
         $this->idTemp = $idTemp;
     }
 }

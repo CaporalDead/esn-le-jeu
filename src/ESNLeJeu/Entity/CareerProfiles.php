@@ -62,7 +62,7 @@ class CareerProfiles
     public static function getName($CareerProfile)
     {
         $reflectionClass = new ReflectionClass(__CLASS__);
-        $constants = array_flip($reflectionClass->getConstants());
+        $constants       = array_flip($reflectionClass->getConstants());
 
         return $constants[$CareerProfile];
     }

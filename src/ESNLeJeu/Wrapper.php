@@ -1,6 +1,6 @@
 <?php namespace Jhiino\ESNLeJeu;
 
-
+use Jhiino\ESNLeJeu\Module\AuditModule;
 use Jhiino\ESNLeJeu\Module\ComplaintsModule;
 use Jhiino\ESNLeJeu\Module\EmployeesModule;
 use Jhiino\ESNLeJeu\Module\StatsModule;
@@ -48,5 +48,13 @@ class Wrapper
     public function employees()
     {
         return new EmployeesModule($this->client);
+    }
+
+    /**
+     * @return AuditModule
+     */
+    public function audit()
+    {
+        return new AuditModule($this->client);
     }
 }

@@ -4,6 +4,7 @@ use Jhiino\ESNLeJeu\Client;
 use Jhiino\ESNLeJeu\Entity\Applicant;
 use Jhiino\ESNLeJeu\Entity\Employee;
 use Jhiino\ESNLeJeu\Entity\NewApplicant;
+use Jhiino\ESNLeJeu\Entity\Options;
 use Jhiino\ESNLeJeu\Entity\Ressource;
 use Jhiino\ESNLeJeu\Entity\Tender;
 use Symfony\Component\DomCrawler\Crawler;
@@ -22,15 +23,15 @@ class EmployeesModule extends Module
 
     /**
      * @param Client $client
-     * @param        $careerProfile
      * @param Tender $tender
      *
      * @return Employee[]
      */
-    public static function idlesForCareerProfile(Client $client, $careerProfile, Tender $tender)
+    public static function idlesForCareerProfile(Client $client, Tender $tender)
     {
         /** @var Employee[] $idles */
         $idles = [];
+        $careerProfile = $tender->careerProfile;
 
         $url  = self::IDLES_URI . '?id_ao=' . $tender->id;
         $html = $client->getConnection()->get($url)->send()->getBody(true);
@@ -133,31 +134,37 @@ class EmployeesModule extends Module
      * @param Crawler $crawler
      * @param         $careerProfile
      *
-     * @return NewApplicant
+     * @return NewApplicant|null
      */
     public static function parseApplicantFromHtml(Crawler $crawler, $careerProfile)
     {
-        // Déjà embauché
-        if ("c'est signé !" == trim($crawler->filter('td:nth-child(4)')->html())) {
-            return false;
-        }
+        $a = $crawler->filter('td:nth-child(4)')->filter('a.btn');
 
-        // A ce moment, l'id du tr n'est pas l'id du candidat
-        $idTemp = preg_replace('/\D/', '', $crawler->attr('id'));
-        $name   = filter_var(trim($crawler->filter('td:nth-child(1)')->html()), FILTER_SANITIZE_STRING);
-        preg_match('/\((F){1}\)/', $crawler->filter('td:nth-child(2)')->html(), $matches);
-        $type = reset($matches);
-        $pay  = preg_replace('/\D/', '', $crawler->filter('td:nth-child(3)')->html());
-
-        if ($type == Ressource::TYPE_FREELANCE) {
-            $cost = $pay;
-            $pay  = null;
-        } else {
-            $type = Ressource::TYPE_EMPLOYEE;
+        if (null != $a->getNode(0) && "contacter" == $a->html()) {
+            // A ce moment, l'id du tr n'est pas l'id du candidat
+            $idTemp = preg_replace('/\D/', '', $crawler->attr('id'));
+            $name   = filter_var(trim($crawler->filter('td:nth-child(1)')->html()), FILTER_SANITIZE_STRING);
+            preg_match('/\((F){1}\)/', $crawler->filter('td:nth-child(2)')->html(), $matches);
+            $type = reset($matches);
+            $pay  = preg_replace('/\D/', '', $crawler->filter('td:nth-child(3)')->html());
             $cost = null;
+
+            // Salarié ou freelance
+            if ($type == Ressource::TYPE_FREELANCE) {
+                $cost = $pay;
+                $pay  = null;
+            } else {
+                $type = Ressource::TYPE_EMPLOYEE;
+            }
+
+            if( ($type == Ressource::TYPE_FREELANCE && Options::HIRE_FREELANCES)
+                ||  ($type == Ressource::TYPE_EMPLOYEE && Options::HIRE_EMPLOYEES)
+            ) {
+                return new NewApplicant(null, $name, $careerProfile, $type, $pay, $cost, $idTemp);
+            }
         }
 
-        return new NewApplicant(null, $name, $careerProfile, $type, $pay, $cost, $idTemp);
+        return null;
     }
 
     /**
@@ -169,6 +176,8 @@ class EmployeesModule extends Module
      */
     public static function hire(Client $client, NewApplicant $newApplicant, Tender $tender)
     {
+
+
         $post = [
             'a'       => 'EC',
             'id_c'    => $newApplicant->idTemp,
@@ -181,15 +190,43 @@ class EmployeesModule extends Module
 
         if (null != $crawler->filter('span.positif')->getNode(0)) {
             // Trouver notre candidat et mettre à jour son id
+
             /** @var Applicant $possibleApplicant */
-            foreach (self::idlesForCareerProfile($client, $newApplicant->careerProfile, $tender) as $possibleApplicant) {
+            foreach (self::idlesForCareerProfile($client, $tender) as $possibleApplicant) {
                 if ($possibleApplicant instanceof Applicant
                     && $possibleApplicant->cost == $newApplicant->cost
                     && 0 === strpos($possibleApplicant->name, $newApplicant->name)
                 ) {
-                    return new Applicant($possibleApplicant->id, $newApplicant->name, $newApplicant->careerProfile, $newApplicant->type, $newApplicant->pay);
+                    $applicant = new Applicant($possibleApplicant->id, $newApplicant->name, $newApplicant->careerProfile, $newApplicant->type, $newApplicant->pay);
+
+                    if (Options::DEVELOPMENT) {
+                        print(vsprintf('%sRecrutement OK : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]',
+                            [
+                                PHP_EOL,
+                                $tender->id,
+                                $applicant->id,
+                                $tender->careerProfile,
+                                $tender->margin
+                            ]
+                        ));
+                    }
+
+                    return $applicant;
                 }
             }
+        }
+
+        if (Options::DEVELOPMENT) {
+            print(vsprintf('%sRecrutement KO : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s], Message[%s]',
+                [
+                    PHP_EOL,
+                    $tender->id,
+                    $newApplicant->id,
+                    $tender->careerProfile,
+                    $tender->margin,
+                    $crawler->html()
+                ]
+            ));
         }
 
         return false;

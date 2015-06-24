@@ -1,10 +1,12 @@
 <?php
 
 use Jhiino\ESNLeJeu\Client;
+use Jhiino\ESNLeJeu\Entity\Options;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
-use Jhiino\ESNLeJeu\Entity\Tender;
 use Jhiino\ESNLeJeu\Entity\User;
 use Jhiino\ESNLeJeu\Wrapper;
+
+// TODO : remove
 
 require(dirname(__FILE__) . '/../vendor/autoload.php');
 set_time_limit(3500);
@@ -32,7 +34,25 @@ $all        = $stats['won'] + $stats['lost'];
 $percentage = ($all > 0) ? round($stats['won'] / $all * 100, 2) : 0;
 print(PHP_EOL . 'Propales gagnees ce jour : ' . $stats['won'] . ' (' . $percentage . '%)');
 
-// Baratiner
+// Audit
+if (Scheduler::isAuditTime()) {
+    // Tempo random
+    Scheduler::waitBeforeNextStep();
+
+    // Virer les salariés trop payés
+    if (Options::AUDIT_FIRE_EMPLOYEES) {
+        $response = $modules->audit()->fireEmployees();
+        print(PHP_EOL . 'Salaries trop payes vires : ' . $response);
+    }
+
+    // Rénégocier les contrats
+    if (Options::AUDIT_RENEGOTIATE_CONTRACTS) {
+        $response = $modules->audit()->renegotiateContracts();
+        print(PHP_EOL . 'Contrats renegocies : ' . $response);
+    }
+}
+
+// Baratins
 if (Scheduler::isFlannelTime()) {
     // Tempo random
     Scheduler::waitBeforeNextStep();
@@ -50,7 +70,7 @@ if (Scheduler::isBusinessTime()) {
 
     // Récupérer tous les appels d'offres
     $tenders = $modules->tenders()->tenders();
-    print(PHP_EOL . 'Appels d\'offres selon critères (>= ' . Tender::MIN_WEEKS . ' semaines) : ' . count($tenders));
+    print(PHP_EOL . 'Appels d\'offres selon critères (>= ' . Options::BID_MIN_WEEKS . ' semaines) : ' . count($tenders));
 
     // Tempo random
     Scheduler::waitBeforeNextStep();
