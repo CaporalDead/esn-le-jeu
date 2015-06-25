@@ -1,0 +1,50 @@
+account:
+    login: my-login
+    password: my-password
+    esn: Le nom de mon ESN
+    email: mon@email.tld
+
+modules:
+    everytime:
+        - \Jhiino\ESNLeJeu\Module\StatsModule: popularity
+        - \Jhiino\ESNLeJeu\Module\StatsModule: tenders
+    audit:
+        - \Jhiino\ESNLeJeu\Module\AuditModule: fireEmployees
+        - \Jhiino\ESNLeJeu\Module\AuditModule: renegotiateContracts
+    flannel:
+        - \Jhiino\ESNLeJeu\Module\ComplaintsModule: flannel
+    business:
+        - \Jhiino\ESNLeJeu\Module\TendersModule: tenders
+        - \Jhiino\ESNLeJeu\Module\TendersModule: bidOnTenders
+
+tenders:
+    hire: true
+    min_weeks: 6
+    min_interest_margin: 0.22
+    trade_promotion: 0.97
+    max_bid_per_hour: 100
+    net_margin: 0.21
+
+employees:
+    hire_employees: true
+    hire_freelances: false
+
+audit:
+    fire: false
+    max_fire_per_hours: 30
+    renegociate_contracts: true
+
+mailer:
+    host: smtp.gmail.com
+    port: 465
+    security: ssl
+    username: my-login
+    password: my-password
+    from: mon@email.tld
+    from_as: ESN Le Bot
+    recipients:
+        - mon@email.tld
+        - peut-etre-un-autre@email.tld
+
+logger:
+    level: DEBUG
