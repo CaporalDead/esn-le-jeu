@@ -4,7 +4,7 @@ namespace Jhiino\ESNLeJeu\Logger;
 
 use Jhiino\ESNLeJeu\Mailer;
 
-class MailLogger extends ConfigurableLogger
+class MailLogger extends ConfigurableLogger implements NeedToBeFlushedInterface
 {
     /**
      * @var array
