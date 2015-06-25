@@ -4,10 +4,15 @@ use Exception;
 use Guzzle\Plugin\Cookie\CookieJar\ArrayCookieJar;
 use Guzzle\Plugin\Cookie\CookiePlugin;
 use Guzzle\Service\Client as GuzzleClient;
+use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
 
-class Client
+class Client implements ConfigAwareInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var string
      */
@@ -37,18 +42,6 @@ class Client
      * @var string : nom de la société
      */
     public $esnName;
-
-    /**
-     * @param        $esnName
-     * @param string $username User's login
-     * @param string $password Hashed password (md5)
-     */
-    public function __construct($esnName, $username, $password)
-    {
-        $this->username = $username;
-        $this->password = $password;
-        $this->esnName  = $esnName;
-    }
 
     /**
      * @return GuzzleClient
@@ -101,8 +94,45 @@ class Client
 
         if (null == $crawler->filter('#intro')->filter('h1:contains("les finances de ' . $this->esnName . '")')->getNode(0)) {
             throw new Exception('Connection failed.');
-        } else {
-            print(PHP_EOL . "Connexion OK");
         }
+
+        $this->logger->info('Connexion OK');
+    }
+
+    /**
+     * @param array $parameters
+     *
+     * @return $this
+     */
+    public function applyConfig(array $parameters = [])
+    {
+        $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
+
+        $this->esnName  = $parameters['esn'];
+        $this->username = $parameters['login'];
+        $this->password = $parameters['password'];
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigKey()
+    {
+        return 'account';
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultConfiguration()
+    {
+        return [
+            'login'    => null,
+            'password' => null,
+            'esn'      => null,
+            'email'    => null,
+        ];
     }
 }

@@ -1,5 +1,8 @@
-<?php namespace Jhiino\ESNLeJeu\Module;
+<?php
 
+namespace Jhiino\ESNLeJeu\Module;
+
+use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Entity\Applicant;
 use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\NewApplicant;
@@ -8,14 +11,48 @@ use Jhiino\ESNLeJeu\Entity\Ressource;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Entity\Tender;
 use Jhiino\ESNLeJeu\Helper\Node;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
 
-class TendersModule extends Module
+class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var string
      */
     const URI = '/place-de-marche.php';
+
+    /**
+     * @var int
+     */
+    protected $minWeeks;
+
+    /**
+     * @var float
+     */
+    protected $minInterestMargin;
+
+    /**
+     * @var float
+     */
+    protected $tradePromotion;
+
+    /**
+     * @var int
+     */
+    protected $maxBidPerHour;
+
+    /**
+     * @var float
+     */
+    protected $netMargin;
+
+    /**
+     * @var bool
+     */
+    protected $hire;
 
     /*
      * @return Tender[]
@@ -29,35 +66,34 @@ class TendersModule extends Module
             $page = 1;
 
             do {
-                $url  = vsprintf('%s?C=%s&P=%s', [self::URI, $careerProfile, $page]);
-                $body = $this->client->getConnection()->get($url)->send()->getBody(true);
-
-                $crawler = new Crawler($body);
-
+                $url      = vsprintf('%s?C=%s&P=%s', [self::URI, $careerProfile, $page]);
+                $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+                $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 
                 if (0 == $children->count()) {
                     break;
                 }
 
-                $children->each(
-                    function (Crawler $child) use (&$tenders, $careerProfile, $page) {
-                        // Si le bouton voir existe et qu'il n'y a pas de cadenas
-                        if (Node::buttonExists($child, 'td:nth-child(5) > a.btn', 'Voir')
-                            && ! Node::nodeExists($child, 'td:nth-child(3) > span.ui-icon-locked')
-                        ) {
-                            $tender = self::parseFromHtml($child, $careerProfile, $page);
+                $children->each(function (Crawler $child) use (&$tenders, $careerProfile, $page) {
+                    // Si le bouton voir existe et qu'il n'y a pas de cadenas
+                    if (
+                        Node::buttonExists($child, 'td:nth-child(5) > a.btn', 'Voir')
+                        && ! Node::nodeExists($child, 'td:nth-child(3) > span.ui-icon-locked')
+                    ) {
+                        $tender = self::parseFromHtml($child, $careerProfile, $page);
 
-                            if ($tender instanceof Tender && $tender->weeks >= Options::BID_MIN_WEEKS) {
-                                $tenders[] = $tender;
-                            }
+                        if ($tender instanceof Tender && $tender->weeks >= $this->minWeeks) {
+                            $tenders[] = $tender;
                         }
                     }
-                );
+                });
 
                 $page++;
             } while (true);
         }
+
+        $this->logger->info(sprintf('Appels d\'offres selon critères (>= %s semaines) : %s', $this->minWeeks, count($tenders)));
 
         return $tenders;
     }
@@ -90,8 +126,9 @@ class TendersModule extends Module
 
         // Debug
         if (Options::DEVELOPMENT) {
-            print(vsprintf('%sOffre[%s] : %s, Ressource[%s] : %s, Marge brute[%s], Marge nette[%s]',
-                [
+            print(
+            vsprintf(
+                '%sOffre[%s] : %s, Ressource[%s] : %s, Marge brute[%s], Marge nette[%s]', [
                     PHP_EOL,
                     $tender->id,
                     $tender->businessProposal,
@@ -100,10 +137,11 @@ class TendersModule extends Module
                     $margin,
                     round($margin - 0.21, 5)
                 ]
-            ));
+            )
+            );
         }
 
-        if ($margin >= Options::BID_MIN_INTEREST_MARGIN && $margin > $tender->margin) {
+        if ($margin >= $this->minInterestMargin && $margin > $tender->margin) {
             // Debug
             if (Options::DEVELOPMENT) {
                 print(PHP_EOL . 'Nouvelle marge : ' . $margin);
@@ -117,12 +155,11 @@ class TendersModule extends Module
     /**
      * Répondre aux appels d'offres
      *
-     * @param array $tenders
-     *
      * @return array
      */
-    public function bidOnTenders(array $tenders = [])
+    public function bidOnTenders()
     {
+        $tenders       = $this->tenders();
         $bids          = [];
         $allIdles      = [];
         $allApplicants = [];
@@ -136,7 +173,7 @@ class TendersModule extends Module
             $tender = $tenders[$key];
 
             // Contrôler le nombre minimal de semaines
-            if ($tender->weeks >= Options::BID_MIN_WEEKS) {
+            if ($tender->weeks >= $this->minWeeks) {
                 // 1 - Pour chaque offre, essayer de placer un idle
                 /** @var Ressource[] $idles */
                 $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender);
@@ -148,7 +185,7 @@ class TendersModule extends Module
                 }
 
                 // 2 - Sinon essayer de recruter
-                if (null == $tender->ressource && Options::HIRE) {
+                if (null == $tender->ressource && $this->hire) {
                     /** @var Ressource[] $idles */
                     $newApplicants = EmployeesModule::applicantsForCareerProfile($this->client, $tender->careerProfile);
 
@@ -179,19 +216,22 @@ class TendersModule extends Module
                         $bids[] = $tender;
                     }
 
-                    Scheduler::waitBeforeNextBid();
+                    Scheduler::getInstance()->waitBeforeNextBid();
                 }
             }
 
             // Supprimer l'offre du tableau
             unset($tenders[$key]);
-        } while (count($bids) < Options::BID_MAX_BID_PER_HOUR && ! empty($tenders));
+        } while (count($bids) < $this->maxBidPerHour && ! empty($tenders));
+
+        $this->logger->info(sprintf('Inter missions à placer : %s', count($allIdles)));
+        $this->logger->info(sprintf('Réponses aux appels d\'offres : %s', count($bids)));
+        $this->logger->info(sprintf('Recrutements : %s', count($allApplicants)));
 
         return [
             'bids'          => $bids,
             'idles'         => $allIdles,
             'newApplicants' => $allApplicants
-
         ];
     }
 
@@ -202,13 +242,11 @@ class TendersModule extends Module
      */
     private function bid(Tender $tender)
     {
-        $return = false;
-
+        $return    = false;
         $ressource = $tender->ressource;
 
-        if ($ressource instanceof Ressource && null != $ressource->id && $tender->margin >= Options::BID_MIN_INTEREST_MARGIN
-        ) {
-            $post = [
+        if ($ressource instanceof Ressource && null != $ressource->id && $tender->margin >= $this->minInterestMargin) {
+            $post    = [
                 'a'        => 'AOC',
                 'id_ao'    => $tender->id,
                 'numrow'   => rand(1, 30),
@@ -216,11 +254,9 @@ class TendersModule extends Module
                 'num_cand' => $ressource->id,
                 'typ_cand' => $ressource::CODE
             ];
-
             $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
             $crawler = new Crawler($body);
-
-            $node = Node::nodeExists($crawler, 'td.pannel_e > b');
+            $node    = Node::nodeExists($crawler, 'td.pannel_e > b');
 
             if ($node && 0 === stripos($node->html(), 'Bravo')) {
                 $return = true;
@@ -231,8 +267,9 @@ class TendersModule extends Module
         if (Options::DEVELOPMENT) {
             $msg = ($return) ? 'Placement OK' : 'Placement KO';
 
-            print(vsprintf('%s%s : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]',
-                [
+            print(
+            vsprintf(
+                '%s%s : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]', [
                     PHP_EOL,
                     $msg,
                     $tender->id,
@@ -240,9 +277,52 @@ class TendersModule extends Module
                     $tender->careerProfile,
                     $tender->margin
                 ]
-            ));
+            )
+            );
         }
 
         return $return;
+    }
+
+    /**
+     * @param array $parameters
+     *
+     * @return $this
+     */
+    public function applyConfig(array $parameters = [])
+    {
+        $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
+
+        $this->hire              = $parameters['hire'];
+        $this->minWeeks          = $parameters['min_weeks'];
+        $this->minInterestMargin = $parameters['min_interest_margin'];
+        $this->tradePromotion    = $parameters['trade_promotion'];
+        $this->maxBidPerHour     = $parameters['max_bid_per_hour'];
+        $this->netMargin         = $parameters['net_margin'];
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigKey()
+    {
+        return 'tenders';
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultConfiguration()
+    {
+        return [
+            'hire'                => true,
+            'min_weeks'           => 6,
+            'min_interest_margin' => 0.22,
+            'trade_promotion'     => 0.97,
+            'max_bid_per_hour'    => 100,
+            'net_margin'          => 0.21,
+        ];
     }
 }

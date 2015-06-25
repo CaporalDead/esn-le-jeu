@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu\Module;
+<?php
+
+namespace Jhiino\ESNLeJeu\Module;
 
 use Jhiino\ESNLeJeu\Client;
 

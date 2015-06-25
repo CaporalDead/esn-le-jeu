@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu\Entity;
+<?php
+
+namespace Jhiino\ESNLeJeu\Entity;
 
 use ReflectionClass;
 
@@ -61,7 +63,7 @@ class CareerProfiles
      */
     public static function getName($CareerProfile)
     {
-        $reflectionClass = new ReflectionClass(__CLASS__);
+        $reflectionClass = new ReflectionClass(self::class);
         $constants       = array_flip($reflectionClass->getConstants());
 
         return $constants[$CareerProfile];

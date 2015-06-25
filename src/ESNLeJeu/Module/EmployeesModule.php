@@ -1,6 +1,9 @@
-<?php namespace Jhiino\ESNLeJeu\Module;
+<?php
+
+namespace Jhiino\ESNLeJeu\Module;
 
 use Jhiino\ESNLeJeu\Client;
+use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Entity\Applicant;
 use Jhiino\ESNLeJeu\Entity\Employee;
 use Jhiino\ESNLeJeu\Entity\NewApplicant;
@@ -9,7 +12,7 @@ use Jhiino\ESNLeJeu\Entity\Ressource;
 use Jhiino\ESNLeJeu\Entity\Tender;
 use Symfony\Component\DomCrawler\Crawler;
 
-class EmployeesModule extends Module
+class EmployeesModule extends Module implements ConfigAwareInterface
 {
     /**
      * @var string
@@ -22,6 +25,16 @@ class EmployeesModule extends Module
     const APPLICANTS_URI = '/banque-cv.php';
 
     /**
+     * @var bool
+     */
+    protected $hireEmployees;
+
+    /**
+     * @var bool
+     */
+    protected $hireFreelances;
+
+    /**
      * @param Client $client
      * @param Tender $tender
      *
@@ -30,26 +43,21 @@ class EmployeesModule extends Module
     public static function idlesForCareerProfile(Client $client, Tender $tender)
     {
         /** @var Employee[] $idles */
-        $idles = [];
+        $idles         = [];
         $careerProfile = $tender->careerProfile;
-
-        $url  = self::IDLES_URI . '?id_ao=' . $tender->id;
-        $html = $client->getConnection()->get($url)->send()->getBody(true);
-
-        $crawler = new Crawler($html);
-
-        $children = $crawler->filter('#choix-emploi tr:nth-child(n+2)');
+        $url           = vsprintf('%s?id_ao=%s', [self::IDLES_URI, $tender->id]);
+        $html          = $client->getConnection()->get($url)->send()->getBody(true);
+        $crawler       = new Crawler($html);
+        $children      = $crawler->filter('#choix-emploi tr:nth-child(n+2)');
 
         if ($children->count() > 0) {
-            $children->each(
-                function (Crawler $child) use (&$idles, $careerProfile) {
-                    $employee = self::parseIdleFromHtml($child, $careerProfile);
+            $children->each(function (Crawler $child) use (&$idles, $careerProfile) {
+                $employee = self::parseIdleFromHtml($child, $careerProfile);
 
-                    if (null != $employee) {
-                        $idles[$employee->id] = $employee;
-                    }
+                if (null != $employee) {
+                    $idles[$employee->id] = $employee;
                 }
-            );
+            });
         }
 
         return $idles;
@@ -66,11 +74,13 @@ class EmployeesModule extends Module
         $temp = explode(',', $crawler->filter('td:nth-child(4)')->filter('a.btn')->attr('onclick'));
         $id   = preg_replace('/\D/', '', $temp[1]);
         $name = filter_var(trim($crawler->filter('td:nth-child(1)')->html()), FILTER_SANITIZE_STRING);
+
         preg_match('/\((S|F){1}\)/', $name, $matches);
+
         $type = reset($matches);
         $cost = preg_replace('/\D/', '', $crawler->filter('td:nth-child(3)')->html());
+        $src  = filter_var($crawler->filter('td:nth-child(2)')->html(), FILTER_SANITIZE_STRING);
 
-        $src = filter_var($crawler->filter('td:nth-child(2)')->html(), FILTER_SANITIZE_STRING);
         switch (utf8_decode($src)) {
             // Employé
             case 'intercontrat' :
@@ -99,13 +109,11 @@ class EmployeesModule extends Module
     {
         /** @var Applicant[] $newApplicants */
         $newApplicants = [];
-
-        $page = 1;
+        $page          = 1;
 
         do {
-            $url  = vsprintf(self::APPLICANTS_URI . '?C=%s&P=%s', [$careerProfile, $page]);
-            $html = $client->getConnection()->get($url)->send()->getBody(true);
-
+            $url      = vsprintf(self::APPLICANTS_URI . '?C=%s&P=%s', [$careerProfile, $page]);
+            $html     = $client->getConnection()->get($url)->send()->getBody(true);
             $crawler  = new Crawler($html);
             $children = $crawler->filter(self::CSS_FILTER);
 
@@ -113,16 +121,14 @@ class EmployeesModule extends Module
                 break;
             }
 
-            $children->each(
-                function (Crawler $child) use (&$newApplicants, $careerProfile) {
+            $children->each(function (Crawler $child) use (&$newApplicants, $careerProfile) {
 
-                    $newApplicant = self::parseApplicantFromHtml($child, $careerProfile);
+                $newApplicant = self::parseApplicantFromHtml($child, $careerProfile);
 
-                    if ($newApplicant instanceof NewApplicant) {
-                        $newApplicants[$newApplicant->idTemp] = $newApplicant;
-                    }
+                if ($newApplicant instanceof NewApplicant) {
+                    $newApplicants[$newApplicant->idTemp] = $newApplicant;
                 }
-            );
+            });
 
             $page++;
         } while (true);
@@ -157,8 +163,9 @@ class EmployeesModule extends Module
                 $type = Ressource::TYPE_EMPLOYEE;
             }
 
-            if( ($type == Ressource::TYPE_FREELANCE && Options::HIRE_FREELANCES)
-                ||  ($type == Ressource::TYPE_EMPLOYEE && Options::HIRE_EMPLOYEES)
+            if (
+                ($type == Ressource::TYPE_FREELANCE && Options::HIRE_FREELANCES)
+                || ($type == Ressource::TYPE_EMPLOYEE && Options::HIRE_EMPLOYEES)
             ) {
                 return new NewApplicant(null, $name, $careerProfile, $type, $pay, $cost, $idTemp);
             }
@@ -176,15 +183,12 @@ class EmployeesModule extends Module
      */
     public static function hire(Client $client, NewApplicant $newApplicant, Tender $tender)
     {
-
-
-        $post = [
+        $post    = [
             'a'       => 'EC',
             'id_c'    => $newApplicant->idTemp,
             'numrow'  => rand(1, 30),
             'propsal' => ((Ressource::TYPE_EMPLOYEE == $newApplicant->type) ? $newApplicant->pay : $newApplicant->cost)
         ];
-
         $html    = $client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
         $crawler = new Crawler($html);
 
@@ -193,7 +197,8 @@ class EmployeesModule extends Module
 
             /** @var Applicant $possibleApplicant */
             foreach (self::idlesForCareerProfile($client, $tender) as $possibleApplicant) {
-                if ($possibleApplicant instanceof Applicant
+                if (
+                    $possibleApplicant instanceof Applicant
                     && $possibleApplicant->cost == $newApplicant->cost
                     && 0 === strpos($possibleApplicant->name, $newApplicant->name)
                 ) {
@@ -217,8 +222,9 @@ class EmployeesModule extends Module
         }
 
         if (Options::DEVELOPMENT) {
-            print(vsprintf('%sRecrutement KO : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s], Message[%s]',
-                [
+            print(
+            vsprintf(
+                '%sRecrutement KO : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s], Message[%s]', [
                     PHP_EOL,
                     $tender->id,
                     $newApplicant->id,
@@ -226,9 +232,44 @@ class EmployeesModule extends Module
                     $tender->margin,
                     $crawler->html()
                 ]
-            ));
+            )
+            );
         }
 
         return false;
+    }
+
+    /**
+     * @param array $parameters
+     *
+     * @return $this
+     */
+    public function applyConfig(array $parameters = [])
+    {
+        $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
+
+        $this->hireEmployees = $parameters['hire_employees'];
+        $this->hireFreelances = $parameters['hire_freelances'];
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigKey()
+    {
+        return 'employees';
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultConfiguration()
+    {
+        return [
+            'hire_employees' => true,
+            'hire_freelances' => false,
+        ];
     }
 }

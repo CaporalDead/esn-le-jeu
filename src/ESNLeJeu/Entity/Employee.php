@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu\Entity;
+<?php
+
+namespace Jhiino\ESNLeJeu\Entity;
 
 class Employee extends Ressource
 {

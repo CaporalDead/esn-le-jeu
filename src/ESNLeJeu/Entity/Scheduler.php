@@ -1,32 +1,60 @@
-<?php namespace Jhiino\ESNLeJeu\Entity;
+<?php
+
+namespace Jhiino\ESNLeJeu\Entity;
 
 use DateTime;
+use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 
-class Scheduler
+class Scheduler implements ConfigAwareInterface
 {
     /**
+     * @var bool
+     */
+    protected $activate;
+
+    /**
+     * @var Scheduler
+     */
+    protected static $instance;
+
+    private function __construct()
+    {
+    }
+
+    public static function getInstance()
+    {
+        if (null === self::$instance) {
+            self::$instance = new Scheduler();
+        }
+
+        return self::$instance;
+    }
+
+    /**
      * Baratin
+     *
      * @return bool
      */
-    public static function isFlannelTime()
+    public function isFlannelTime()
     {
         $now = new DateTime();
 
         $startTime = new DateTime();
-        $startTime->setTime(6, 0, 0);
+        $stopTime  = new DateTime();
 
+        $startTime->setTime(6, 0, 0);
         // Si tard en cas d'OPA réussie
-        $stopTime = new DateTime();
         $stopTime->setTime(11, 59, 59);
 
-        return Options::FLANNEL && ($now >= $startTime) && ($now <= $stopTime);
+        return $this->activate && ($now >= $startTime) && ($now <= $stopTime);
     }
 
     /**
      * Audit
+     *
      * @return bool
      */
-    public static function isAuditTime()
+    public function isAuditTime()
     {
         $now = new DateTime();
 
@@ -41,9 +69,10 @@ class Scheduler
 
     /**
      * Réponses aux appels d'offres
+     *
      * @return bool
      */
-    public static function isBusinessTime()
+    public function isBusinessTime()
     {
         $now = new DateTime();
 
@@ -56,21 +85,21 @@ class Scheduler
         return (($now >= $startTime) && ($now <= $stopTime)) || Options::DEVELOPMENT;
     }
 
-    public static function waitForStart()
+    public function waitForStart()
     {
         if (! Options::DEVELOPMENT) {
             sleep(rand(1, 99));
         }
     }
 
-    public static function waitBeforeNextStep()
+    public function waitBeforeNextStep()
     {
         if (! Options::DEVELOPMENT) {
             sleep(rand(1, 29));
         }
     }
 
-    public static function waitBeforeNextBid()
+    public function waitBeforeNextBid()
     {
         if (! Options::DEVELOPMENT) {
             usleep(rand(876543, 1598765));
@@ -79,13 +108,49 @@ class Scheduler
         }
     }
 
-    public static function waitBeforeNextComplaint()
+    public function waitBeforeNextComplaint()
     {
         if (! Options::DEVELOPMENT) {
             usleep(rand(100000, 456789));
         } else {
             usleep(10000);
         }
-
     }
-} 
+
+    public function isActivate()
+    {
+        return $this->activate;
+    }
+
+    /**
+     * @param array $parameters
+     *
+     * @return $this
+     */
+    public function applyConfig(array $parameters = [])
+    {
+        $parameters = array_merge($this->getDefaultConfiguration(), $parameters);
+
+        $this->activate = $parameters['activate'];
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigKey()
+    {
+        return 'flannel';
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultConfiguration()
+    {
+        return [
+            'activate' => false,
+        ];
+    }
+}

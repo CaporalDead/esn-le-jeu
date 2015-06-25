@@ -1,9 +1,15 @@
-<?php namespace Jhiino\ESNLeJeu\Module;
+<?php
 
+namespace Jhiino\ESNLeJeu\Module;
+
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
 
-class StatsModule extends Module
+class StatsModule extends Module implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var string
      */
@@ -14,7 +20,6 @@ class StatsModule extends Module
      */
     const PROPALES_URI = '/propale.php';
 
-
     /*
      * @return float
      */
@@ -22,9 +27,14 @@ class StatsModule extends Module
     {
         $body    = $this->client->getConnection()->get(self::HOME_URI)->send()->getBody(true);
         $crawler = new Crawler($body);
+
         preg_match('!\d+(?:\.\d+)?!', $crawler->filter('div.meter > span')->attr('style'), $matches);
 
-        return reset($matches);
+        $popularity = reset($matches);
+
+        $this->logger->info(sprintf('Popularité : %s%%', $popularity));
+
+        return $popularity;
     }
 
     public function tenders()
@@ -39,9 +49,18 @@ class StatsModule extends Module
         $crawler = new Crawler($body);
         $lost    = preg_replace('/\D/', '', $crawler->filter('#main-content > div.nav-results > div')->html());
 
+        $all        = $won + $lost;
+        $percentage = ($all > 0) ? round($won / $all * 100, 2) : 0;
+
+        $this->logger->info(vsprintf('Propales gagnees ce jour : %s (%s%%)', [
+            $won,
+            $percentage,
+        ]));
+
         return [
-            'won'  => $won,
-            'lost' => $lost
+            'won'        => $won,
+            'lost'       => $lost,
+            'percentage' => $percentage,
         ];
     }
 }

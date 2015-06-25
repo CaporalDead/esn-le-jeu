@@ -1,5 +1,6 @@
 <?php namespace Jhiino\ESNLeJeu;
 
+use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Module\AuditModule;
 use Jhiino\ESNLeJeu\Module\ComplaintsModule;
 use Jhiino\ESNLeJeu\Module\EmployeesModule;
@@ -13,9 +14,19 @@ class Wrapper
      */
     private $client;
 
-    public function __construct(Client $client)
+    /**
+     * @var array
+     */
+    private $config;
+
+    public function __construct(Client $client, array $config = [])
     {
         $this->client = $client;
+        $this->config = $config;
+
+        if ($this->client instanceof ConfigAwareInterface) {
+            $this->client->applyConfig($this->config);
+        }
     }
 
     /**
@@ -23,7 +34,13 @@ class Wrapper
      */
     public function stats()
     {
-        return new StatsModule($this->client);
+        $module = new StatsModule($this->client);
+
+        if ($module instanceof ConfigAwareInterface) {
+            $module->applyConfig($this->config);
+        }
+
+        return $module;
     }
 
     /**
@@ -31,7 +48,13 @@ class Wrapper
      */
     public function tenders()
     {
-        return new TendersModule($this->client);
+        $module = new TendersModule($this->client);
+
+        if ($module instanceof ConfigAwareInterface) {
+            $module->applyConfig($this->config);
+        }
+
+        return $module;
     }
 
     /**
@@ -39,7 +62,13 @@ class Wrapper
      */
     public function complaints()
     {
-        return new ComplaintsModule($this->client);
+        $module = new ComplaintsModule($this->client);
+
+        if ($module instanceof ConfigAwareInterface) {
+            $module->applyConfig($this->config);
+        }
+
+        return $module;
     }
 
     /**
@@ -47,7 +76,13 @@ class Wrapper
      */
     public function employees()
     {
-        return new EmployeesModule($this->client);
+        $module = new EmployeesModule($this->client);
+
+        if ($module instanceof ConfigAwareInterface) {
+            $module->applyConfig($this->config);
+        }
+
+        return $module;
     }
 
     /**
@@ -55,6 +90,12 @@ class Wrapper
      */
     public function audit()
     {
-        return new AuditModule($this->client);
+        $module = new AuditModule($this->client);
+
+        if ($module instanceof ConfigAwareInterface) {
+            $module->applyConfig($this->config);
+        }
+
+        return $module;
     }
 }

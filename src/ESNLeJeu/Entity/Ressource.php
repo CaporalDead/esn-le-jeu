@@ -1,25 +1,48 @@
-<?php namespace Jhiino\ESNLeJeu\Entity;
+<?php
+
+namespace Jhiino\ESNLeJeu\Entity;
 
 use Exception;
 
 abstract class Ressource
 {
     /**
-     * @var int : nombre de jours travaillés dans l'année
+     * Nombre de jours travaillés dans l'année
+     *
+     * @var int
      */
     const WORKED_DAYS_A_YEAR = 143;
 
-    const CODE           = '';
-    const TYPE_EMPLOYEE  = '(S)';
+    /**
+     * @var string
+     */
+    const CODE = '';
+
+    /**
+     * Ressource de type Employé
+     *
+     * @var string
+     */
+    const TYPE_EMPLOYEE = '(S)';
+
+    /**
+     * Ressource de type "Freelance"
+     *
+     * @var string
+     */
     const TYPE_FREELANCE = '(F)';
 
     /**
-     * @var int : id du salarié
+     * ID du salarié
+     *
+     * @var int
      */
     public $id;
 
     /**
-     * @var string nom du salarié
+     * Nom du salarié
+     *
+     * @var string
      */
     public $name;
 
@@ -29,12 +52,16 @@ abstract class Ressource
     public $careerProfile;
 
     /**
-     * @var int : salaire d'embauche
+     * Salaire d'embauche
+     *
+     * @var int
      */
     public $pay;
 
     /**
-     * @var int : coût journalier avec charges
+     * Coût journalier avec charges
+     *
+     * @var int
      */
     public $cost;
 
@@ -44,12 +71,12 @@ abstract class Ressource
     public $type = self::TYPE_EMPLOYEE;
 
     /**
-     * @param        $id
-     * @param        $name
-     * @param        $careerProfile
-     * @param string $type
-     * @param        $pay
-     * @param        $cost
+     * @param      $id
+     * @param      $name
+     * @param      $careerProfile
+     * @param      $type
+     * @param null $pay
+     * @param null $cost
      *
      * @throws Exception
      */

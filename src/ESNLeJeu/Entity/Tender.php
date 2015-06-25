@@ -3,37 +3,51 @@
 class Tender
 {
     /**
-     * @var int : id de l'appel d'offre
+     * ID de l'appel d'offre
+     *
+     * @var int
      */
     public $id;
 
     /**
-     * @var string : nom du client
+     * Nom du client
+     *
+     * @var string
      */
     public $customer;
 
     /**
-     * @var string : compétence demandée
+     * Compétence demandée
+     *
+     * @var string
      */
     public $careerProfile;
 
     /**
-     * @var int : nombre de semaines de l'appel d'offre
+     * Nombre de semaines de l'appel d'offre
+     *
+     * @var int
      */
     public $weeks;
 
     /**
-     * @var int : budget du client
+     * Budget du client
+     *
+     * @var int
      */
     public $budget;
 
     /**
-     * @var int : prix proposé au client
+     * Prix proposé au client
+     *
+     * @var int
      */
     public $businessProposal;
 
     /**
-     * @var int : page de l'offre
+     * Page de l'offre
+     *
+     * @var int
      */
     public $page;
 

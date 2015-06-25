@@ -1,5 +1,8 @@
-<?php namespace Jhiino\ESNLeJeu\Module;
+<?php
 
+namespace Jhiino\ESNLeJeu\Module;
+
+use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Entity\Applicant;
 use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\NewApplicant;
@@ -10,7 +13,7 @@ use Jhiino\ESNLeJeu\Entity\Tender;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Symfony\Component\DomCrawler\Crawler;
 
-class AuditModule extends Module
+class AuditModule extends Module implements ConfigAwareInterface
 {
     /**
      * @var string
@@ -23,15 +26,34 @@ class AuditModule extends Module
     const URI_RENEGOTIATE = '/contrats.php';
 
     /**
+     * @var bool
+     */
+    protected $fire;
+
+    /**
+     * @var int
+     */
+    protected $maxFirePerHour;
+
+    /**
+     * @var bool
+     */
+    protected $renegotiateContracts;
+
+    /**
      * Permet de virer les salariés trop payés
+     *
      * @return int
      */
     public function fireEmployees()
     {
         /** @var int $result */
         $result = 0;
+        $page   = 1;
 
-        $page = 1;
+        if (! $this->fire) {
+            return $result;
+        }
 
         do {
             $url  = vsprintf('%s?C=%s&P=%s', [self::URI_FIRE, 'STS', $page]);
@@ -45,55 +67,47 @@ class AuditModule extends Module
                 break;
             }
 
-            $children->each(
-                function (Crawler $crawler) use (&$result) {
+            $children->each(function (Crawler $crawler) use (&$result) {
+                $button = Node::buttonExists($crawler, 'td:nth-child(4) > a.btn', 'Infos');
 
-                    $button = Node::buttonExists($crawler, 'td:nth-child(4) > a.btn', 'Infos');
+                // Si bouton info
+                if ($button) {
+                    // Analyser les possibilités
+                    $temp    = explode(',', $button->attr('onclick'));
+                    $id      = preg_replace('/\D/', '', $temp[0]);
+                    $numrow  = rand(1, 30);
+                    $post    = [
+                        'a'      => 'VRH',
+                        'id_r'   => $id,
+                        'numrow' => $numrow
+                    ];
+                    $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
+                    $crawler = new Crawler($html);
+                    $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Virer');
 
-                    // Si bouton info
                     if ($button) {
-
-                        // Analyser les possibilités
-                        $temp   = explode(',', $button->attr('onclick'));
-                        $id     = preg_replace('/\D/', '', $temp[0]);
-                        $numrow = rand(1, 30);
-
+                        // Virer
                         $post = [
-                            'a'      => 'VRH',
+                            'a'      => 'V',
                             'id_r'   => $id,
                             'numrow' => $numrow
                         ];
 
-                        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
-                        $crawler = new Crawler($html);
+                        $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
 
-                        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Virer');
+                        // Confirmer
+                        $post = [
+                            'a'      => 'VC',
+                            'id_r'   => $id,
+                            'numrow' => $numrow
+                        ];
 
-                        if ($button) {
+                        $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
 
-                            // Virer
-                            $post = [
-                                'a'      => 'V',
-                                'id_r'   => $id,
-                                'numrow' => $numrow
-                            ];
-
-                            $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
-
-                            // Confirmer
-                            $post = [
-                                'a'      => 'VC',
-                                'id_r'   => $id,
-                                'numrow' => $numrow
-                            ];
-
-                            $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
-
-                            $result++;
-                        }
+                        $result++;
                     }
                 }
-            );
+            });
 
             $page++;
         } while (true);
@@ -106,15 +120,17 @@ class AuditModule extends Module
         /** @var array $results */
         $results = [];
 
+        if (! $this->renegotiateContracts) {
+            return $results;
+        }
+
         foreach (['RE', 'RN', 'RF', 'RI'] as $type) {
             $page = 1;
 
             do {
-                $url = vsprintf('%s?C=%s&P=%s', [self::URI_RENEGOTIATE, $type, $page]);
-
-                $body    = $this->client->getConnection()->get($url)->send()->getBody(true);
-                $crawler = new Crawler($body);
-
+                $url      = vsprintf('%s?C=%s&P=%s', [self::URI_RENEGOTIATE, $type, $page]);
+                $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+                $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 
                 if (0 == $children->count()) {
@@ -123,30 +139,25 @@ class AuditModule extends Module
 
                 $children->each(
                     function (Crawler $crawler) use (&$results) {
-
                         $button = Node::buttonExists($crawler, 'td:nth-child(6) > a.btn', 'Détails');
 
                         // Si bouton détails
                         if ($button) {
                             // Analyser les possibilités
-                            $temp   = explode(',', $button->attr('onclick'));
-                            $id     = preg_replace('/\D/', '', $temp[0]);
-                            $numrow = rand(1, 30);
-
-                            $post = [
+                            $temp    = explode(',', $button->attr('onclick'));
+                            $id      = preg_replace('/\D/', '', $temp[0]);
+                            $numrow  = rand(1, 30);
+                            $post    = [
                                 'a'      => 'CIF',
                                 'id_r'   => $id,
                                 'numrow' => $numrow
                             ];
-
                             $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
                             $crawler = new Crawler($html);
-
-                            $button = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.tuto-renego', 'Renégocier', true);
+                            $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.tuto-renego', 'Renégocier', true);
 
                             // Si bouton renégocier
                             if ($button) {
-
                                 $post = [
                                     'a'      => 'C_RENOGO0',
                                     'id_r'   => $id,
@@ -155,21 +166,17 @@ class AuditModule extends Module
 
                                 $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
                                 $crawler = new Crawler($html);
+                                $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', '5% - Négociation amicale', true);
 
-                                $button = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', '5% - Négociation amicale', true);
-
-                                // Négociation 5%
                                 if ($button) {
-                                    $post = [
+                                    $post    = [
                                         'a'      => 'C_RENOGO1',
                                         'id_r'   => $id,
                                         'numrow' => $numrow
                                     ];
-
                                     $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
                                     $crawler = new Crawler($html);
-
-                                    $button = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', 'Accepter', true);
+                                    $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', 'Accepter', true);
 
                                     // Accepter
                                     if ($button) {
@@ -190,7 +197,7 @@ class AuditModule extends Module
                 );
 
                 // Max par heure
-                if ($results > Options::AUDIT_MAX_FIRE_PER_HOUR) {
+                if ($results > $this->maxFirePerHour) {
                     break;
                 }
 
@@ -199,5 +206,41 @@ class AuditModule extends Module
         }
 
         return $results;
+    }
+
+    /**
+     * @param array $parameters
+     *
+     * @return $this
+     */
+    public function applyConfig(array $parameters = [])
+    {
+        $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
+
+        $this->fire = $parameters['fire'];
+        $this->maxFirePerHour = $parameters['max_fire_per_hours'];
+        $this->renegotiateContracts = $parameters['renegociate_contracts'];
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigKey()
+    {
+        return 'audit';
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultConfiguration()
+    {
+        return [
+            'fire'                  => false,
+            'max_fire_per_hours'    => 30,
+            'renegociate_contracts' => true,
+        ];
     }
 }
