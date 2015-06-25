@@ -17,7 +17,7 @@ if (! file_exists($configFile = dirname(__FILE__) . '/../config/parameters.yml')
 $config = Yaml::parse($configFile);
 
 //$logger = (new \Jhiino\ESNLeJeu\Logger\PhpOutpuLogger())->applyConfig($config);
-$logger    = new \Jhiino\ESNLeJeu\Logger\MailLogger((new \Jhiino\ESNLeJeu\Mailer())->applyConfig($config));
+$logger    = (new \Jhiino\ESNLeJeu\Logger\MailLogger((new \Jhiino\ESNLeJeu\Mailer())->applyConfig($config)))->applyConfig($config);
 $client    = new Client();
 $orchestra = new \Jhiino\ESNLeJeu\Orchestra($client, $config);
 

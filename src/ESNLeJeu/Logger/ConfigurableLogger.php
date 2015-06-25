@@ -10,7 +10,7 @@ abstract class ConfigurableLogger extends AbstractLogger implements ConfigAwareI
     /**
      * @var array
      */
-    protected $levels;
+    protected $levels = [];
 
     /**
      * @param array $parameters
