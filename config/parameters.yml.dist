@@ -23,7 +23,6 @@ tenders:
     min_interest_margin: 0.22
     trade_promotion: 0.97
     max_bid_per_hour: 100
-    net_margin: 0.21
 
 employees:
     hire_employees: true

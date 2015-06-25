@@ -45,11 +45,6 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
     protected $maxBidPerHour;
 
     /**
-     * @var float
-     */
-    protected $netMargin;
-
-    /**
      * @var bool
      */
     protected $hire;
@@ -298,7 +293,6 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
         $this->minInterestMargin = $parameters['min_interest_margin'];
         $this->tradePromotion    = $parameters['trade_promotion'];
         $this->maxBidPerHour     = $parameters['max_bid_per_hour'];
-        $this->netMargin         = $parameters['net_margin'];
 
         return $this;
     }
@@ -322,7 +316,6 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
             'min_interest_margin' => 0.22,
             'trade_promotion'     => 0.97,
             'max_bid_per_hour'    => 100,
-            'net_margin'          => 0.21,
         ];
     }
 }
