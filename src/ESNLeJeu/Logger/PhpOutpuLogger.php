@@ -2,9 +2,7 @@
 
 namespace Jhiino\ESNLeJeu\Logger;
 
-use Psr\Log\AbstractLogger;
-
-class PhpOutpuLogger extends AbstractLogger
+class PhpOutpuLogger extends ConfigurableLogger
 {
     /**
      * Logs with an arbitrary level.
@@ -17,7 +15,11 @@ class PhpOutpuLogger extends AbstractLogger
      */
     public function log($level, $message, array $context = [])
     {
-        $target = in_array($level, ['DEBUG', 'INFO', 'NOTICE', 'WARNING']) ? 'php://stdout' : 'php://stderr';
+        if (! in_array(strtoupper($level), $this->levels)) {
+            return;
+        }
+
+        $target = in_array(strtoupper($level), ['DEBUG', 'INFO', 'NOTICE', 'WARNING']) ? 'php://stdout' : 'php://stderr';
         $output = vsprintf('[%s] : %s%s', [
             $level,
             $message,

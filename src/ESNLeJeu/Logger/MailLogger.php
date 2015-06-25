@@ -3,9 +3,8 @@
 namespace Jhiino\ESNLeJeu\Logger;
 
 use Jhiino\ESNLeJeu\Mailer;
-use Psr\Log\AbstractLogger;
 
-class MailLogger extends AbstractLogger implements NeedToBeFlushedInterface
+class MailLogger extends ConfigurableLogger
 {
     /**
      * @var array
@@ -33,6 +32,10 @@ class MailLogger extends AbstractLogger implements NeedToBeFlushedInterface
      */
     public function log($level, $message, array $context = [])
     {
+        if (! in_array(strtoupper($level), $this->levels)) {
+            return;
+        }
+
         $output = vsprintf('[%s] : %s%s', [
             $level,
             $message,

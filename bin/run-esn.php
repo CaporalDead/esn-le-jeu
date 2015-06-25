@@ -16,9 +16,9 @@ if (! file_exists($configFile = dirname(__FILE__) . '/../config/parameters.yml')
 
 $config = Yaml::parse($configFile);
 
-//$logger = new \Jhiino\ESNLeJeu\Logger\PhpOutpuLogger();
-$logger = new \Jhiino\ESNLeJeu\Logger\MailLogger((new \Jhiino\ESNLeJeu\Mailer())->applyConfig($config));
-$client = new Client();
+//$logger = (new \Jhiino\ESNLeJeu\Logger\PhpOutpuLogger())->applyConfig($config);
+$logger    = new \Jhiino\ESNLeJeu\Logger\MailLogger((new \Jhiino\ESNLeJeu\Mailer())->applyConfig($config));
+$client    = new Client();
 $orchestra = new \Jhiino\ESNLeJeu\Orchestra($client, $config);
 
 $client->setLogger($logger);
@@ -31,11 +31,6 @@ if ($logger instanceof \Jhiino\ESNLeJeu\Logger\NeedToBeFlushedInterface) {
 }
 
 die;
-
-
-
-
-
 
 
 
@@ -64,14 +59,14 @@ if (Scheduler::getInstance()->isAuditTime()) {
 
     // Virer les salariés trop payés
 //    if (Options::AUDIT_FIRE_EMPLOYEES) {
-        $response = $modules->audit()->fireEmployees();
-        print(PHP_EOL . 'Salaries trop payes vires : ' . $response);
+    $response = $modules->audit()->fireEmployees();
+    print(PHP_EOL . 'Salaries trop payes vires : ' . $response);
 //    }
 
     // Rénégocier les contrats
 //    if (Options::AUDIT_RENEGOTIATE_CONTRACTS) {
-        $response = $modules->audit()->renegotiateContracts();
-        print(PHP_EOL . 'Contrats renegocies : ' . $response);
+    $response = $modules->audit()->renegotiateContracts();
+    print(PHP_EOL . 'Contrats renegocies : ' . $response);
 //    }
 }
 
