@@ -25,6 +25,13 @@ class AuditModule extends Module implements ConfigAwareInterface
      */
     const URI_RENEGOTIATE = '/contrats.php';
 
+    protected $paramsToVariable = [
+        'very_good' => 'RE',
+        'good'      => 'RN',
+        'bad'       => 'RF',
+        'very_bad'  => 'RI',
+    ];
+
     /**
      * @var bool
      */
@@ -39,6 +46,11 @@ class AuditModule extends Module implements ConfigAwareInterface
      * @var bool
      */
     protected $renegotiateContracts;
+
+    /**
+     * @var array
+     */
+    protected $contractsToRenegotiate = [];
 
     /**
      * Permet de virer les salariés trop payés
@@ -124,7 +136,15 @@ class AuditModule extends Module implements ConfigAwareInterface
             return $results;
         }
 
-        foreach (['RE', 'RN', 'RF', 'RI'] as $type) {
+        $todo = [];
+
+        foreach ($this->contractsToRenegotiate as $type => $status) {
+            if (true === $status) {
+                $todo[] = $this->paramsToVariable[$type];
+            }
+        }
+
+        foreach ($todo as $type) {
             $page = 1;
 
             do {
@@ -217,9 +237,10 @@ class AuditModule extends Module implements ConfigAwareInterface
     {
         $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
 
-        $this->fire = $parameters['fire'];
-        $this->maxFirePerHour = $parameters['max_fire_per_hours'];
-        $this->renegotiateContracts = $parameters['renegociate_contracts'];
+        $this->fire                   = $parameters['fire'];
+        $this->maxFirePerHour         = $parameters['max_fire_per_hours'];
+        $this->renegotiateContracts   = $parameters['renegotiate_contracts'];
+        $this->contractsToRenegotiate = $parameters['renegotiate_type'];
 
         return $this;
     }
@@ -241,6 +262,12 @@ class AuditModule extends Module implements ConfigAwareInterface
             'fire'                  => false,
             'max_fire_per_hours'    => 30,
             'renegociate_contracts' => true,
+            'renegotiate_type'      => [
+                'very_good' => true,
+                'good'      => true,
+                'bad'       => true,
+                'very_bad'  => true,
+            ],
         ];
     }
 }

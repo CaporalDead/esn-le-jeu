@@ -31,7 +31,12 @@ employees:
 audit:
     fire: false
     max_fire_per_hours: 30
-    renegociate_contracts: true
+    renegotiate_contracts: true
+    renegotiate_type:
+        very_good: true
+        good: true
+        bad: true
+        very_bad: true
 
 mailer:
     host: smtp.gmail.com
