@@ -1,0 +1,10 @@
+#!/usr/bin/env php
+<?php
+
+if (! file_exists(dirname(__FILE__) . '/../vendor/autoload.php')) {
+    throw new RuntimeException('You have to run `composer update` before running this file.');
+}
+
+require dirname(__FILE__) . '/../vendor/autoload.php';
+
+(new Jhiino\ESNLeJeu\Console\Bot())->run();

@@ -1,1 +1,0 @@
-php /share/Web/Bot/esn-le-jeu/bin/run-esn.php >> /share/Web/Bot/esn-le-jeu/storage/logs/ESNLeJeu/Logs/suivi.log

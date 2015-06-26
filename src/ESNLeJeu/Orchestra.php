@@ -2,7 +2,7 @@
 
 use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
-use Jhiino\ESNLeJeu\Logger\PhpOutpuLogger;
+use Jhiino\ESNLeJeu\Logger\PhpOutputLogger;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
@@ -159,7 +159,7 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
 
         if ($module instanceof LoggerAwareInterface) {
             if (null === $this->logger) {
-                $this->logger = new PhpOutpuLogger();
+                $this->logger = new PhpOutputLogger();
             }
 
             $module->setLogger($this->logger);

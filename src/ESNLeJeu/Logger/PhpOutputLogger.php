@@ -2,7 +2,7 @@
 
 namespace Jhiino\ESNLeJeu\Logger;
 
-class PhpOutpuLogger extends ConfigurableLogger
+class PhpOutputLogger extends ConfigurableLogger
 {
     /**
      * Logs with an arbitrary level.
