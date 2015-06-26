@@ -3,7 +3,7 @@
 class Options
 {
     // Si false, ajoute des timers entre les différentes étapes
-    const DEVELOPMENT = false;
+//    const DEVELOPMENT = false;
 
     // Doléances
 //    const FLANNEL = true;

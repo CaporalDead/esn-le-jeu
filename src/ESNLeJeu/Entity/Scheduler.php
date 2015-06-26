@@ -13,6 +13,11 @@ class Scheduler implements ConfigAwareInterface
     protected $activate;
 
     /**
+     * @var bool
+     */
+    protected $isDevelopment = false;
+
+    /**
      * @var Scheduler
      */
     protected static $instance;
@@ -28,6 +33,11 @@ class Scheduler implements ConfigAwareInterface
         }
 
         return self::$instance;
+    }
+
+    public function isDevelopment()
+    {
+        return $this->isDevelopment;
     }
 
     /**
@@ -82,26 +92,26 @@ class Scheduler implements ConfigAwareInterface
         $stopTime = new DateTime();
         $stopTime->setTime(23, 59, 59);
 
-        return (($now >= $startTime) && ($now <= $stopTime)) || Options::DEVELOPMENT;
+        return (($now >= $startTime) && ($now <= $stopTime)) || $this->isDevelopment();
     }
 
     public function waitForStart()
     {
-        if (! Options::DEVELOPMENT) {
+        if (! $this->isDevelopment()) {
             sleep(rand(1, 99));
         }
     }
 
     public function waitBeforeNextStep()
     {
-        if (! Options::DEVELOPMENT) {
+        if (! $this->isDevelopment()) {
             sleep(rand(1, 29));
         }
     }
 
     public function waitBeforeNextBid()
     {
-        if (! Options::DEVELOPMENT) {
+        if (! $this->isDevelopment()) {
             usleep(rand(876543, 1598765));
         } else {
             usleep(10000);
@@ -110,7 +120,7 @@ class Scheduler implements ConfigAwareInterface
 
     public function waitBeforeNextComplaint()
     {
-        if (! Options::DEVELOPMENT) {
+        if (! $this->isDevelopment()) {
             usleep(rand(100000, 456789));
         } else {
             usleep(10000);
@@ -129,9 +139,9 @@ class Scheduler implements ConfigAwareInterface
      */
     public function applyConfig(array $parameters = [])
     {
-        $parameters = array_merge($this->getDefaultConfiguration(), $parameters);
+        $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
 
-        $this->activate = $parameters['activate'];
+        $this->isDevelopment = $parameters['activate'];
 
         return $this;
     }
@@ -141,7 +151,7 @@ class Scheduler implements ConfigAwareInterface
      */
     public function getConfigKey()
     {
-        return 'flannel';
+        return 'development';
     }
 
     /**

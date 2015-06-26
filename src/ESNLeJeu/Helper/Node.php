@@ -19,10 +19,10 @@ class Node
         $button = $crawler->filter($cssPath);
 
         if ($button->count()) {
-            $buttonValue = ($utf8Decode) ? $button->html() : utf8_decode($button->html());
+            $buttonValue = ! $utf8Decode ? $button->html() : utf8_decode($button->html());
 
             if ($value == $buttonValue) {
-                return true;
+                return $button;
             }
         }
 

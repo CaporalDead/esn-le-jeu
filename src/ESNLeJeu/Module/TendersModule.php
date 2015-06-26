@@ -119,28 +119,17 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
         // Calcul de la marge
         $margin = round(($tender->businessProposal - $ressource->cost) / $tender->businessProposal, 5);
 
-        // Debug
-        if (Options::DEVELOPMENT) {
-            print(
-            vsprintf(
-                '%sOffre[%s] : %s, Ressource[%s] : %s, Marge brute[%s], Marge nette[%s]', [
-                    PHP_EOL,
-                    $tender->id,
-                    $tender->businessProposal,
-                    $ressource->id,
-                    $ressource->cost,
-                    $margin,
-                    round($margin - 0.21, 5)
-                ]
-            )
-            );
-        }
+        $this->logger->debug(vsprintf('Offre[%s] : %s, Ressource[%s] : %s, Marge brute[%s], Marge nette[%s]', [
+            $tender->id,
+            $tender->businessProposal,
+            $ressource->id,
+            $ressource->cost,
+            $margin,
+            round($margin - 0.21, 5)
+        ]));
 
         if ($margin >= $this->minInterestMargin && $margin > $tender->margin) {
-            // Debug
-            if (Options::DEVELOPMENT) {
-                print(PHP_EOL . 'Nouvelle marge : ' . $margin);
-            }
+            $this->logger->debug(sprintf('Nouvelle marge : %s', $margin));
 
             $tender->margin    = $margin;
             $tender->ressource = $ressource;
@@ -258,23 +247,13 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
             }
         }
 
-        // Debug
-        if (Options::DEVELOPMENT) {
-            $msg = ($return) ? 'Placement OK' : 'Placement KO';
-
-            print(
-            vsprintf(
-                '%s%s : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]', [
-                    PHP_EOL,
-                    $msg,
-                    $tender->id,
-                    $tender->ressource->id,
-                    $tender->careerProfile,
-                    $tender->margin
-                ]
-            )
-            );
-        }
+        $this->logger->debug(vsprintf('%s : Offre [%s], Ressource [%s], Profil [%s], Marge brute [%s]', [
+            ($return) ? 'Placement OK' : 'Placement KO',
+            $tender->id,
+            $tender->ressource->id,
+            $tender->careerProfile,
+            $tender->margin
+        ]));
 
         return $return;
     }

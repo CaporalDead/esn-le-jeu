@@ -10,10 +10,14 @@ use Jhiino\ESNLeJeu\Entity\NewApplicant;
 use Jhiino\ESNLeJeu\Entity\Options;
 use Jhiino\ESNLeJeu\Entity\Ressource;
 use Jhiino\ESNLeJeu\Entity\Tender;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
 
-class EmployeesModule extends Module implements ConfigAwareInterface
+class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var string
      */
@@ -204,37 +208,29 @@ class EmployeesModule extends Module implements ConfigAwareInterface
                 ) {
                     $applicant = new Applicant($possibleApplicant->id, $newApplicant->name, $newApplicant->careerProfile, $newApplicant->type, $newApplicant->pay);
 
-                    if (Options::DEVELOPMENT) {
-                        print(vsprintf('%sRecrutement OK : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]',
-                            [
-                                PHP_EOL,
-                                $tender->id,
-                                $applicant->id,
-                                $tender->careerProfile,
-                                $tender->margin
-                            ]
-                        ));
-                    }
+                    // TODO : plus de static
+//                    $this->logger->debug(vsprintf('%sRecrutement OK : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s]', [
+//                        PHP_EOL,
+//                        $tender->id,
+//                        $applicant->id,
+//                        $tender->careerProfile,
+//                        $tender->margin
+//                    ]));
 
                     return $applicant;
                 }
             }
         }
 
-        if (Options::DEVELOPMENT) {
-            print(
-            vsprintf(
-                '%sRecrutement KO : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s], Message[%s]', [
-                    PHP_EOL,
-                    $tender->id,
-                    $newApplicant->id,
-                    $tender->careerProfile,
-                    $tender->margin,
-                    $crawler->html()
-                ]
-            )
-            );
-        }
+        // TODO : plus de static
+//        $this->logger->debug(vsprintf('%sRecrutement KO : Offre[%s], Ressource[%s], Profil[%s], Marge brute[%s], Message[%s]', [
+//            PHP_EOL,
+//            $tender->id,
+//            $newApplicant->id,
+//            $tender->careerProfile,
+//            $tender->margin,
+//            $crawler->html()
+//        ]));
 
         return false;
     }
@@ -248,7 +244,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface
     {
         $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
 
-        $this->hireEmployees = $parameters['hire_employees'];
+        $this->hireEmployees  = $parameters['hire_employees'];
         $this->hireFreelances = $parameters['hire_freelances'];
 
         return $this;
@@ -268,7 +264,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface
     public function getDefaultConfiguration()
     {
         return [
-            'hire_employees' => true,
+            'hire_employees'  => true,
             'hire_freelances' => false,
         ];
     }

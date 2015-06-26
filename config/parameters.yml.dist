@@ -37,6 +37,11 @@ audit:
         good: true
         bad: true
         very_bad: true
+    break_type:
+        very_good: false
+        good: false
+        bad: false
+        very_bad: false
 
 mailer:
     host: smtp.gmail.com
