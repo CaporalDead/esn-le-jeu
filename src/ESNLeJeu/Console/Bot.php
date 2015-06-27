@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu\Console;
+<?php
+
+namespace Jhiino\ESNLeJeu\Console;
 
 use Jhiino\ESNLeJeu\Command\BotCommand;
 use Jhiino\ESNLeJeu\Command\ConfigCommand;

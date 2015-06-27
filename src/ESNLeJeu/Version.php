@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu;
+<?php
+
+namespace Jhiino\ESNLeJeu;
 
 class Version
 {

@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu\Logger;
+<?php
+
+namespace Jhiino\ESNLeJeu\Logger;
 
 interface NeedToBeFlushedInterface
 {

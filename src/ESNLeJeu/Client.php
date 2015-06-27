@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu;
+<?php
+
+namespace Jhiino\ESNLeJeu;
 
 use Exception;
 use Guzzle\Plugin\Cookie\CookieJar\ArrayCookieJar;

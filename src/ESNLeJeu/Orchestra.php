@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu;
+<?php
+
+namespace Jhiino\ESNLeJeu;
 
 use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
