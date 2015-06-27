@@ -50,7 +50,7 @@ class MailLogger extends ConfigurableLogger implements NeedToBeFlushedInterface
      */
     public function flush()
     {
-        $this->mailer->sendOutput('Compte rendu d\'activité', $this->buffer);
+        $this->mailer->sendOutput('Compte rendu d\'activitÃ©', $this->buffer);
 
         $this->buffer = [];
 

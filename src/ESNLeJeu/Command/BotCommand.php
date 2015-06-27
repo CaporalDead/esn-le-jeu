@@ -74,7 +74,7 @@ class BotCommand extends Command
             ->setName('bot:run')
             ->setDescription('Lance le bot ESN')
             ->addOption('config', 'c', InputOption::VALUE_REQUIRED, 'Fichier de configuration.', $this->configFile)
-            ->addOption('logger', 'l', InputOption::VALUE_REQUIRED, 'Le logger utilisé', $this->defaultLoggerType);
+            ->addOption('logger', 'l', InputOption::VALUE_REQUIRED, 'Le logger utilisÃ©', $this->defaultLoggerType);
     }
 
     /**
@@ -127,12 +127,12 @@ class BotCommand extends Command
     {
         switch ($type) {
             case 'phpoutput':
-                $this->logger = new PhpOutputLogger();
+                $this->logger = (new PhpOutputLogger())->applyConfig($this->config);
 
                 break;
             case 'file':
                 $logfile      = dirname(__FILE__) . '/../../../storage/bot.log';
-                $this->logger = new FileLogger($logfile);
+                $this->logger = (new FileLogger($logfile))->applyConfig($this->config);
 
                 break;
             case 'mail':

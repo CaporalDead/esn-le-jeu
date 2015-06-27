@@ -53,6 +53,8 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
 
         $this->initClient();
         $this->applyConfig($this->config);
+
+        Scheduler::getInstance()->applyConfig($this->config);
     }
 
     protected function initClient()

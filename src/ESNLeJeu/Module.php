@@ -54,7 +54,7 @@ abstract class Module implements LoggerAwareInterface, ConfigAwareInterface
     }
 
     /**
-     * Clé pour la configuration
+     * ClÃ© pour la configuration
      *
      * @return string
      */

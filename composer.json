@@ -1,4 +1,6 @@
 {
+    "description": "Bot pour le jeu ESN Le Jeu.",
+    "type": "project",
     "autoload": {
         "psr-4": {
 			"Jhiino\\ESNLeJeu\\": "src/ESNLeJeu"

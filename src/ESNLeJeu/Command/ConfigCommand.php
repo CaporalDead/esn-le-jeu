@@ -16,7 +16,7 @@ class ConfigCommand extends Command
     {
         $this
             ->setName('bot:config:generate')
-            ->setDescription('Génère un fichier de configuration par défaut')
+            ->setDescription('GÃ©nÃ¨re un fichier de configuration par dÃ©faut')
             ->addArgument('destination', InputArgument::OPTIONAL, 'Chemin de destination du fichier', getcwd());
     }
 
