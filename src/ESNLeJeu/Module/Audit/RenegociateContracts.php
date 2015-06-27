@@ -6,45 +6,45 @@ use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
 
-class RenegociateContract extends Module
+class RenegociateContracts extends Module
 {
     /**
-     * URL de base pour les contrats à re négocier
+     * URL de base pour les contrats Ã  re nÃ©gocier
      *
      * @var string
      */
     const URI_RENEGOTIATE = '/contrats.php';
 
     /**
-     * Clé pour la configuration
+     * ClÃ© pour la configuration
      *
      * @var string
      */
     protected $configKey = 'audit';
 
     /**
-     * Indique si on autorise la re négociation de contrats
+     * Indique si on autorise la re nÃ©gociation de contrats
      *
      * @var bool
      */
     protected $renegotiateContracts;
 
     /**
-     * Types de contrats à re négocier
+     * Types de contrats Ã  re nÃ©gocier
      *
      * @var array
      */
     protected $contractsToRenegotiate = [];
 
     /**
-     * Types de contrats à rompre
+     * Types de contrats Ã  rompre
      *
      * @var array
      */
     protected $contractsToBreak = [];
 
     /**
-     * Mapping entre les paramètres du module et les paramètres d'URL
+     * Mapping entre les paramÃ¨tres du module et les paramÃ¨tres d'URL
      *
      * @var array
      */
@@ -56,7 +56,7 @@ class RenegociateContract extends Module
     ];
 
     /**
-     * Renvoi les types de contrats à re négocier
+     * Renvoi les types de contrats Ã  re nÃ©gocier
      *
      * @return array
      */
@@ -74,7 +74,7 @@ class RenegociateContract extends Module
     }
 
     /**
-     * Renvoi les types de contrat à rompre si on ne peut pas les re négocier
+     * Renvoi les types de contrat Ã  rompre si on ne peut pas les re nÃ©gocier
      *
      * @return array
      */
@@ -92,7 +92,7 @@ class RenegociateContract extends Module
     }
 
     /**
-     * Parse une page à la recherche de contrats à re négocier
+     * Parse une page Ã  la recherche de contrats Ã  re nÃ©gocier
      *
      * @param $type
      * @param $page
@@ -110,7 +110,7 @@ class RenegociateContract extends Module
     }
 
     /**
-     * Tente d'obtenir les détails d'un contrat
+     * Tente d'obtenir les dÃ©tails d'un contrat
      *
      * @param $crawler
      *
@@ -118,12 +118,12 @@ class RenegociateContract extends Module
      */
     protected function tryToGetDetails(Crawler $crawler)
     {
-        $this->logger->debug('On cherche le bouton "Détails"');
+        $this->logger->debug('On cherche le bouton "DÃ©tails"');
 
-        $button = Node::buttonExists($crawler, 'td:nth-child(6) > a.btn', 'Détails');
+        $button = Node::buttonExists($crawler, 'td:nth-child(6) > a.btn', 'DÃ©tails');
 
         if (! $button) {
-            $this->logger->debug('Pas de bouton "Détails"');
+            $this->logger->debug('Pas de bouton "DÃ©tails"');
 
             return false;
         }
@@ -139,13 +139,13 @@ class RenegociateContract extends Module
         $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
         $crawler = new Crawler($html);
 
-        $this->logger->debug(sprintf('Les détails du contrat [%s %s]', $id, $numRow));
+        $this->logger->debug(sprintf('Les dÃ©tails du contrat [%s %s]', $id, $numRow));
 
         return new ContractDetails($crawler, $id, $numRow);
     }
 
     /**
-     * Tente de re négocier un contrat
+     * Tente de re nÃ©gocier un contrat
      *
      * @param Crawler $crawler
      * @param         $idToRenegociate
@@ -155,12 +155,12 @@ class RenegociateContract extends Module
      */
     protected function tryToRenegociate(Crawler $crawler, $idToRenegociate, $numRow)
     {
-        $this->logger->debug('On cherche le bouton "Renégocier"');
+        $this->logger->debug('On cherche le bouton "RenÃ©gocier"');
 
-        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.tuto-renego', 'Renégocier', true);
+        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.tuto-renego', 'RenÃ©gocier', true);
 
         if (! $button) {
-            $this->logger->debug('Pas de bouton "Renégocier"');
+            $this->logger->debug('Pas de bouton "RenÃ©gocier"');
 
             return false;
         }
@@ -173,13 +173,13 @@ class RenegociateContract extends Module
         $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
         $crawler = new Crawler($html);
 
-        $this->logger->debug(sprintf('On tente de renégocier le contrat [%s %s]', $idToRenegociate, $numRow));
+        $this->logger->debug(sprintf('On tente de renÃ©gocier le contrat [%s %s]', $idToRenegociate, $numRow));
 
         return $crawler;
     }
 
     /**
-     * Tente une re négociation amicale à 5%
+     * Tente une re nÃ©gociation amicale Ã  5%
      *
      * @param Crawler $crawler
      * @param         $idToRenegociate
@@ -189,12 +189,12 @@ class RenegociateContract extends Module
      */
     protected function tryToFriendlyNegotiate(Crawler $crawler, $idToRenegociate, $numRow)
     {
-        $this->logger->debug('On cherche le bouton "Renégocier à 5%"');
+        $this->logger->debug('On cherche le bouton "RenÃ©gocier Ã  5%"');
 
-        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', '5% - Négociation amicale', true);
+        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', '5% - NÃ©gociation amicale', true);
 
         if (! $button) {
-            $this->logger->debug('Pas de bouton "Renégocier à 5%"');
+            $this->logger->debug('Pas de bouton "RenÃ©gocier Ã  5%"');
 
             return false;
         }
@@ -207,13 +207,13 @@ class RenegociateContract extends Module
         $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
         $crawler = new Crawler($html);
 
-        $this->logger->debug(sprintf('On tente de renégocier à 5% le contrat [%s %s]', $idToRenegociate, $numRow));
+        $this->logger->debug(sprintf('On tente de renÃ©gocier Ã  5% le contrat [%s %s]', $idToRenegociate, $numRow));
 
         return $crawler;
     }
 
     /**
-     * Tente d'accepter une re négociation de contrat
+     * Tente d'accepter une re nÃ©gociation de contrat
      *
      * @param Crawler $crawler
      * @param         $idToRenegociate
@@ -241,7 +241,7 @@ class RenegociateContract extends Module
         $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
         $crawler = new Crawler($html);
 
-        $this->logger->debug(sprintf('On d\'accepter la renégociation à 5% pour le contrat [%s %s]', $idToRenegociate, $numRow));
+        $this->logger->debug(sprintf('On d\'accepter la renÃ©gociation Ã  5% pour le contrat [%s %s]', $idToRenegociate, $numRow));
 
         return $crawler;
     }
@@ -297,7 +297,7 @@ class RenegociateContract extends Module
         $numberOfBreaks         = 0;
 
         foreach ($typesToRenegociate as $currentType) {
-            $this->logger->debug(sprintf('On attaque les renégo pour le type %s', $currentType));
+            $this->logger->debug(sprintf('On attaque les renÃ©go pour le type %s', $currentType));
 
             $page = 1;
 
@@ -306,7 +306,7 @@ class RenegociateContract extends Module
                 $numberOfContracts += $contracts->count();
 
                 if (0 == $contracts->count()) {
-                    $this->logger->debug(sprintf('Aucun contrat n\'est à renégocier pour le type %s sur la page %s', $currentType, $page));
+                    $this->logger->debug(sprintf('Aucun contrat n\'est Ã  renÃ©gocier pour le type %s sur la page %s', $currentType, $page));
 
                     break;
                 }
@@ -331,8 +331,8 @@ class RenegociateContract extends Module
             } while (true);
         }
 
-        $this->logger->info(sprintf('Nombre de contrats à re négocier : %s', $numberOfContracts));
-        $this->logger->info(sprintf('Nombre de contrats re négociés : %s', $numberOfRenegotiations));
+        $this->logger->info(sprintf('Nombre de contrats Ã  re nÃ©gocier : %s', $numberOfContracts));
+        $this->logger->info(sprintf('Nombre de contrats re nÃ©gociÃ©s : %s', $numberOfRenegotiations));
         $this->logger->info(sprintf('Nombre de contrats rompus : %s', $numberOfBreaks));
     }
 
@@ -350,5 +350,27 @@ class RenegociateContract extends Module
         $this->contractsToBreak       = $parameters['break_type'];
 
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDefaultConfiguration()
+    {
+        return [
+            'renegociate_contracts' => true,
+            'renegotiate_type'      => [
+                'very_good' => true,
+                'good'      => true,
+                'bad'       => true,
+                'very_bad'  => true,
+            ],
+            'break_type'      => [
+                'very_good' => false,
+                'good'      => false,
+                'bad'       => false,
+                'very_bad'  => false,
+            ],
+        ];
     }
 }

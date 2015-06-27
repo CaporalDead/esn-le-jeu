@@ -82,7 +82,7 @@ class ConfigCommand extends Command
             ],
             'audit'     => [
                 'fire'                  => false,
-                'max_fire_per_hours'    => 30,
+                'max_fire_per_hour'     => 30,
                 'renegotiate_contracts' => true,
                 'renegotiate_type'      => [
                     'very_good' => true,

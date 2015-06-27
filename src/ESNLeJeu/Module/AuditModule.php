@@ -246,13 +246,13 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                         } elseif (in_array($type, $break)) {
                             $this->logger->debug('On tente de rompre le contrat de type ' . $type);
 
-                            $button  = Node::buttonExists($crawler, 'div:nth-child(1) > a:nth-child(4)', 'Rompre', true);
+                            $button = Node::buttonExists($crawler, 'div:nth-child(1) > a:nth-child(4)', 'Rompre');
 
                             if ($button) {
                                 $this->logger->debug('On romps le contrat');
 
-                                $numrow  = rand(1, 30);
-                                $post    = [
+                                $numrow = rand(1, 30);
+                                $post   = [
                                     'a'      => 'CRC',
                                     'id_r'   => $id,
                                     'numrow' => $numrow
@@ -283,7 +283,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
         $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
 
         $this->fire                   = $parameters['fire'];
-        $this->maxFirePerHour         = $parameters['max_fire_per_hours'];
+        $this->maxFirePerHour         = $parameters['max_fire_per_hour'];
         $this->renegotiateContracts   = $parameters['renegotiate_contracts'];
         $this->contractsToRenegotiate = $parameters['renegotiate_type'];
         $this->contractsToBreak       = $parameters['break_type'];
@@ -306,7 +306,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
     {
         return [
             'fire'                  => false,
-            'max_fire_per_hours'    => 30,
+            'max_fire_per_hour'     => 30,
             'renegociate_contracts' => true,
             'renegotiate_type'      => [
                 'very_good' => true,
@@ -314,7 +314,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                 'bad'       => true,
                 'very_bad'  => true,
             ],
-            'break_type'      => [
+            'break_type'            => [
                 'very_good' => false,
                 'good'      => false,
                 'bad'       => false,
