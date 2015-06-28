@@ -65,7 +65,6 @@ class ConfigCommand extends Command
                     ['\\Jhiino\\ESNLeJeu\\Module\\ComplaintsModule' => 'flannel'],
                 ],
                 'business'  => [
-                    ['\\Jhiino\\ESNLeJeu\\Module\\TendersModule' => 'tenders'],
                     ['\\Jhiino\\ESNLeJeu\\Module\\TendersModule' => 'bidOnTenders'],
                 ],
             ],
