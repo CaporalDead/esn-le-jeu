@@ -2,6 +2,7 @@
 
 namespace Jhiino\ESNLeJeu\Module\Audit;
 
+use Jhiino\ESNLeJeu\Entity\ObjectDetails;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
@@ -114,7 +115,7 @@ class RenegociateContracts extends Module
      *
      * @param $crawler
      *
-     * @return bool|ContractDetails
+     * @return bool|ObjectDetails()
      */
     protected function tryToGetDetails(Crawler $crawler)
     {
@@ -141,7 +142,7 @@ class RenegociateContracts extends Module
 
         $this->logger->debug(sprintf('Les détails du contrat [%s %s]', $id, $numRow));
 
-        return new ContractDetails($crawler, $id, $numRow);
+        return new ObjectDetails($crawler, $id, $numRow);
     }
 
     /**
@@ -365,7 +366,7 @@ class RenegociateContracts extends Module
                 'bad'       => true,
                 'very_bad'  => true,
             ],
-            'break_type'      => [
+            'break_type'            => [
                 'very_good' => false,
                 'good'      => false,
                 'bad'       => false,

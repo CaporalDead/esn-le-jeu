@@ -2,9 +2,9 @@
 
 namespace Jhiino\ESNLeJeu\Module\Complaint;
 
+use Jhiino\ESNLeJeu\Entity\ObjectDetails;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
-use Jhiino\ESNLeJeu\Module\Audit\EmployeeDetails;
 use Symfony\Component\DomCrawler\Crawler;
 
 class Flannel extends Module
@@ -33,8 +33,9 @@ class Flannel extends Module
 
     /**
      * @param Crawler $crawler
+
      *
-     * @return bool|EmployeeDetails
+*@return bool|ObjectDetails
      */
     protected function tryToProcess(Crawler $crawler)
     {
@@ -61,7 +62,7 @@ class Flannel extends Module
 
         $this->logger->debug(sprintf('Les détails de l\'employé [%s %s]', $id, $numRow));
 
-        return new EmployeeDetails($crawler, $id, $numRow);
+        return new ObjectDetails($crawler, $id, $numRow);
     }
 
     protected function tryToFlannel(Crawler $crawler, $idToFlannel, $numRow)

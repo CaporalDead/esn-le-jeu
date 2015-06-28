@@ -2,6 +2,7 @@
 
 namespace Jhiino\ESNLeJeu\Module\Audit;
 
+use Jhiino\ESNLeJeu\Entity\ObjectDetails;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -51,7 +52,7 @@ class FireEmployees extends Module
      *
      * @param Crawler $crawler
      *
-     * @return bool|EmployeeDetails
+     * @return bool|ObjectDetails
      */
     protected function tryToGetInfos(Crawler $crawler)
     {
@@ -78,7 +79,7 @@ class FireEmployees extends Module
 
         $this->logger->debug(sprintf('Les détails de l\'employé [%s %s]', $id, $numRow));
 
-        return new EmployeeDetails($crawler, $id, $numRow);
+        return new ObjectDetails($crawler, $id, $numRow);
     }
 
     /**

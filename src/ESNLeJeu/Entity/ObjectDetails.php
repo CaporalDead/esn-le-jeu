@@ -1,10 +1,8 @@
 <?php
 
-namespace Jhiino\ESNLeJeu\Module\Audit;
+namespace Jhiino\ESNLeJeu\Entity;
 
-use Symfony\Component\DomCrawler\Crawler;
-
-class ContractDetails
+class ObjectDetails
 {
     /**
      * @var Crawler
@@ -22,7 +20,7 @@ class ContractDetails
     public $numRow;
 
     /**
-     * ContractDetails constructor.
+     * EmployeeDetails constructor.
      *
      * @param Crawler $crawler
      * @param int     $id
