@@ -4,9 +4,6 @@ namespace Jhiino\ESNLeJeu;
 
 use Exception;
 use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Request;
 use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Psr\Log\LoggerAwareInterface;
@@ -72,9 +69,10 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
 
         $this->httpClient = new GuzzleClient([
             'base_uri' => self::BASE_URI,
+            'cookies'  => true,
             'headers'  => [
                 'Upgrade-Insecure-Requests' => '1',
-                'User-Agent'                => 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36',
+                'User-Agent'                => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0',
             ],
         ]);
     }
@@ -89,7 +87,7 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
             'password' => $this->password,
             'login'    => ''
         ];
-        $body    = $this->httpClient->post(self::CONNECTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $body    = $this->post(self::CONNECTION_URI, $post);
         $crawler = new Crawler($body);
 
         $node = Node::nodeExists($crawler, '#intro > .navfil');
@@ -106,6 +104,31 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
         }
 
         throw new Exception('Connection failed.');
+    }
+
+    /**
+     * @param       $uri
+     * @param array $postData
+     *
+     * @return string
+     */
+    public function post($uri, array $postData = [])
+    {
+        $response = $this->getConnection()->post($uri, ['form_params' => $postData]);
+
+        return $response->getBody()->getContents();
+    }
+
+    /**
+     * @param $uri
+     *
+     * @return string
+     */
+    public function get($uri)
+    {
+        $response = $this->getConnection()->get($uri);
+
+        return $response->getBody()->getContents();
     }
 
     /**

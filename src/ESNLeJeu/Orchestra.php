@@ -25,22 +25,22 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
     /**
      * @var array
      */
-    protected $everyTime;
+    protected $everyTime = [];
 
     /**
      * @var array
      */
-    protected $audit;
+    protected $audit = [];
 
     /**
      * @var array
      */
-    protected $flannel;
+    protected $flannel = [];
 
     /**
      * @var array
      */
-    protected $business;
+    protected $business = [];
 
     /**
      * @param Client $client
@@ -126,10 +126,10 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
     {
         $parameters = array_merge($this->getDefaultConfiguration(), $parameters[$this->getConfigKey()]);
 
-        $this->everyTime = $parameters['everytime'];
-        $this->audit     = $parameters['audit'];
-        $this->flannel   = $parameters['flannel'];
-        $this->business  = $parameters['business'];
+        $this->everyTime = array_merge(is_array($parameters['everytime']) ? $parameters['everytime'] : [], $this->everyTime);
+        $this->audit     = array_merge(is_array($parameters['audit']) ? $parameters['audit'] : [], $this->audit);
+        $this->flannel   = array_merge(is_array($parameters['flannel']) ? $parameters['flannel'] : [], $this->flannel);
+        $this->business  = array_merge(is_array($parameters['business']) ? $parameters['business'] : [], $this->business);
 
         return $this;
     }
