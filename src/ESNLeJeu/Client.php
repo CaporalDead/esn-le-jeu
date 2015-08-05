@@ -3,10 +3,12 @@
 namespace Jhiino\ESNLeJeu;
 
 use Exception;
-use Guzzle\Plugin\Cookie\CookieJar\ArrayCookieJar;
-use Guzzle\Plugin\Cookie\CookiePlugin;
-use Guzzle\Service\Client as GuzzleClient;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Request;
 use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
+use Jhiino\ESNLeJeu\Helper\Node;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
@@ -68,12 +70,13 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
             return;
         }
 
-        $this->httpClient = new GuzzleClient(self::BASE_URI);
-        $cookieJar        = new ArrayCookieJar();
-        $cookiePlugin     = new CookiePlugin($cookieJar);
-
-        $this->httpClient->addSubscriber($cookiePlugin);
-        $this->httpClient->setUserAgent('Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20130401 Firefox/31.0');
+        $this->httpClient = new GuzzleClient([
+            'base_uri' => self::BASE_URI,
+            'headers'  => [
+                'Upgrade-Insecure-Requests' => '1',
+                'User-Agent'                => 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36',
+            ],
+        ]);
     }
 
     /**
@@ -81,24 +84,28 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
      */
     protected function connectUser()
     {
-        // Essai de connexion
-        $post         = [
+        $post    = [
             'username' => $this->username,
             'password' => $this->password,
             'login'    => ''
         ];
-        $loginRequest = $this->httpClient->post(self::CONNECTION_URI, [], $post);
+        $body    = $this->httpClient->post(self::CONNECTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $crawler = new Crawler($body);
 
-        // Vérification de la connexion
-        $responseLogin = $loginRequest->send();
-        $body          = $responseLogin->getBody(true);
-        $crawler       = new Crawler($body);
+        $node = Node::nodeExists($crawler, '#intro > .navfil');
 
-        if (null == $crawler->filter('#intro')->filter('h1:contains("les finances de ' . $this->esnName . '")')->getNode(0)) {
-            throw new Exception('Connection failed.');
+        if ($node) {
+            $textToFind = sprintf('les finances de %s', $this->esnName);
+            $parsedText = trim($node->html());
+
+            if (0 !== stripos($parsedText, $textToFind)) {
+                $this->logger->info('Connexion OK');
+
+                return true;
+            }
         }
 
-        $this->logger->info('Connexion OK');
+        throw new Exception('Connection failed.');
     }
 
     /**

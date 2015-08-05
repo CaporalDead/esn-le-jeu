@@ -3,6 +3,7 @@
 namespace Jhiino\ESNLeJeu\Module\Complaint;
 
 use Jhiino\ESNLeJeu\Entity\ObjectDetails;
+use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
@@ -24,7 +25,7 @@ class Flannel extends Module
     protected function parsePage($page)
     {
         $url      = vsprintf('%s?P=%s', [self::URI_DOLEANCES, $page]);
-        $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+        $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
         $crawler  = new Crawler($body);
         $children = $crawler->filter(self::CSS_FILTER);
 
@@ -33,9 +34,8 @@ class Flannel extends Module
 
     /**
      * @param Crawler $crawler
-
      *
-*@return bool|ObjectDetails
+     * @return bool|ObjectDetails
      */
     protected function tryToProcess(Crawler $crawler)
     {
@@ -49,15 +49,15 @@ class Flannel extends Module
             return false;
         }
 
-        $temp   = explode(',', $button->attr('onclick'));
-        $id     = preg_replace('/\D/', '', $temp[0]);
-        $numRow = rand(1, 30);
-        $post = [
+        $temp    = explode(',', $button->attr('onclick'));
+        $id      = preg_replace('/\D/', '', $temp[0]);
+        $numRow  = rand(1, 30);
+        $post    = [
             'a'      => 'D',
             'id_r'   => $id,
             'numrow' => $numRow
         ];
-        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('Les détails de l\'employé [%s %s]', $id, $numRow));
@@ -82,7 +82,7 @@ class Flannel extends Module
             'id_r'   => $idToFlannel,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         if (null != $crawler->filter('span.positif')->getNode(0)) {
@@ -99,7 +99,7 @@ class Flannel extends Module
      */
     public function fire()
     {
-        $page    = 1;
+        $page = 1;
 
         $numberOfEmployeesToFlannel = 0;
         $numberOfEmployeesFlanneled = 0;
@@ -120,7 +120,11 @@ class Flannel extends Module
                         $numberOfEmployeesFlanneled += $result;
                     }
                 }
+
+                Scheduler::getInstance()->waitBeforeNextAction();
             });
+
+            Scheduler::getInstance()->waitBeforeNextAction();
 
             $page++;
         } while (true);

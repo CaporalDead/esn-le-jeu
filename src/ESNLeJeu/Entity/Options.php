@@ -13,7 +13,7 @@ class Options
     // Offres
 //    const BID_MIN_WEEKS           = 6;
 //    const BID_MIN_INTEREST_MARGIN = 0.22;
-    const BID_TRADE_PROMOTION     = 0.97;
+//    const BID_TRADE_PROMOTION     = 0.97;
 //    const BID_MAX_BID_PER_HOUR    = 100;
 //    const NET_MARGIN              = 0.21;
 

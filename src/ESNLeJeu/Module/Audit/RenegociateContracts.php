@@ -3,6 +3,7 @@
 namespace Jhiino\ESNLeJeu\Module\Audit;
 
 use Jhiino\ESNLeJeu\Entity\ObjectDetails;
+use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
@@ -103,7 +104,7 @@ class RenegociateContracts extends Module
     protected function parsePage($type, $page)
     {
         $url      = vsprintf('%s?C=%s&P=%s', [self::URI_RENEGOTIATE, $type, $page]);
-        $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+        $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
         $crawler  = new Crawler($body);
         $children = $crawler->filter(self::CSS_FILTER);
 
@@ -137,7 +138,7 @@ class RenegociateContracts extends Module
             'id_r'   => $id,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('Les détails du contrat [%s %s]', $id, $numRow));
@@ -171,7 +172,7 @@ class RenegociateContracts extends Module
             'id_r'   => $idToRenegociate,
             'numrow' => $numRow,
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('On tente de renégocier le contrat [%s %s]', $idToRenegociate, $numRow));
@@ -205,7 +206,7 @@ class RenegociateContracts extends Module
             'id_r'   => $idToRenegociate,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('On tente de renégocier à 5% le contrat [%s %s]', $idToRenegociate, $numRow));
@@ -239,7 +240,7 @@ class RenegociateContracts extends Module
             'id_r'   => $idToRenegociate,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('On d\'accepter la renégociation à 5% pour le contrat [%s %s]', $idToRenegociate, $numRow));
@@ -273,7 +274,7 @@ class RenegociateContracts extends Module
             'id_r'   => $idToBreak,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('On tente de rompre le contrat [%s %s]', $idToBreak, $numRow));
@@ -326,7 +327,11 @@ class RenegociateContracts extends Module
                             }
                         }
                     }
+
+                    Scheduler::getInstance()->waitBeforeNextAction();
                 });
+
+                Scheduler::getInstance()->waitBeforeNextAction();
 
                 $page++;
             } while (true);

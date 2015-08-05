@@ -18,12 +18,12 @@ class Tender extends Module
     public function fire()
     {
         // Offres gagnées
-        $body    = $this->client->getConnection()->get(self::PROPALES_URI . '?C=PG')->send()->getBody(true);
+        $body    = $this->client->getConnection()->get(self::PROPALES_URI . '?C=PG')->getBody()->getContents();
         $crawler = new Crawler($body);
         $won     = preg_replace('/\D/', '', $crawler->filter('#main-content > div.nav-results > div')->html());
 
         // Offres perdues
-        $body    = $this->client->getConnection()->get(self::PROPALES_URI . '?C=PP')->send()->getBody(true);
+        $body    = $this->client->getConnection()->get(self::PROPALES_URI . '?C=PP')->getBody()->getContents();
         $crawler = new Crawler($body);
         $lost    = preg_replace('/\D/', '', $crawler->filter('#main-content > div.nav-results > div')->html());
 

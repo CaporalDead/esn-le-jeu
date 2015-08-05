@@ -62,7 +62,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
 
             do {
                 $url      = vsprintf('%s?C=%s&P=%s', [self::URI, $careerProfile, $page]);
-                $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+                $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
                 $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 
@@ -76,7 +76,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
                         Node::buttonExists($child, 'td:nth-child(5) > a.btn', 'Voir')
                         && ! Node::nodeExists($child, 'td:nth-child(3) > span.ui-icon-locked')
                     ) {
-                        $tender = self::parseFromHtml($child, $careerProfile, $page);
+                        $tender = $this->parseFromHtml($child, $careerProfile, $page);
 
                         if ($tender instanceof Tender && $tender->weeks >= $this->minWeeks) {
                             $tenders[] = $tender;
@@ -100,14 +100,14 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
      *
      * @return Tender
      */
-    public static function parseFromHtml(Crawler $crawler, $careerProfile, $page)
+    public function parseFromHtml(Crawler $crawler, $careerProfile, $page)
     {
         $id       = preg_replace('/\D/', '', $crawler->attr('id'));
         $customer = filter_var(trim($crawler->filter('td:nth-child(1)')->html()), FILTER_SANITIZE_STRING);
         $weeks    = preg_replace('/\D/', '', $crawler->filter('td:nth-child(3)')->html());
         $budget   = preg_replace('/\D/', '', $crawler->filter('td:nth-child(4)')->html());
 
-        return new Tender($id, $customer, $careerProfile, $weeks, $budget, $page);
+        return new Tender($id, $customer, $careerProfile, $weeks, $budget, $page, $this->tradePromotion);
     }
 
     /**
@@ -200,7 +200,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
                         $bids[] = $tender;
                     }
 
-                    Scheduler::getInstance()->waitBeforeNextBid();
+                    Scheduler::getInstance()->waitBeforeNextAction();
                 }
             }
 
@@ -238,7 +238,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
                 'num_cand' => $ressource->id,
                 'typ_cand' => $ressource::CODE
             ];
-            $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+            $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
             $crawler = new Crawler($body);
             $node    = Node::nodeExists($crawler, 'td.pannel_e > b');
 

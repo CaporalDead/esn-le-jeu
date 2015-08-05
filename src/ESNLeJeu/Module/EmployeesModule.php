@@ -50,7 +50,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
         $idles         = [];
         $careerProfile = $tender->careerProfile;
         $url           = vsprintf('%s?id_ao=%s', [self::IDLES_URI, $tender->id]);
-        $html          = $client->getConnection()->get($url)->send()->getBody(true);
+        $html          = $client->getConnection()->get($url)->getBody()->getContents();
         $crawler       = new Crawler($html);
         $children      = $crawler->filter('#choix-emploi tr:nth-child(n+2)');
 
@@ -117,7 +117,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
 
         do {
             $url      = vsprintf(self::APPLICANTS_URI . '?C=%s&P=%s', [$careerProfile, $page]);
-            $html     = $client->getConnection()->get($url)->send()->getBody(true);
+            $html     = $client->getConnection()->get($url)->getBody()->getContents();
             $crawler  = new Crawler($html);
             $children = $crawler->filter(self::CSS_FILTER);
 
@@ -193,7 +193,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
             'numrow'  => rand(1, 30),
             'propsal' => ((Ressource::TYPE_EMPLOYEE == $newApplicant->type) ? $newApplicant->pay : $newApplicant->cost)
         ];
-        $html    = $client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+        $html    = $client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         if (null != $crawler->filter('span.positif')->getNode(0)) {

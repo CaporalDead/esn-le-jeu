@@ -3,6 +3,7 @@
 namespace Jhiino\ESNLeJeu\Module\Audit;
 
 use Jhiino\ESNLeJeu\Entity\ObjectDetails;
+use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -40,7 +41,7 @@ class FireEmployees extends Module
     protected function parsePage($page)
     {
         $url      = vsprintf('%s?C=%s&P=%s', [self::URI_FIRE, 'STS', $page]);
-        $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+        $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
         $crawler  = new Crawler($body);
         $children = $crawler->filter(self::CSS_FILTER);
 
@@ -74,7 +75,7 @@ class FireEmployees extends Module
             'id_r'   => $id,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
+        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('Les détails de l\'employé [%s %s]', $id, $numRow));
@@ -108,7 +109,7 @@ class FireEmployees extends Module
             'id_r'   => $idToFire,
             'numrow' => $numRow
         ];
-        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
+        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         return $crawler;
@@ -140,7 +141,7 @@ class FireEmployees extends Module
             'id_r'   => $idToFire,
             'numrow' => $numRow
         ];
-        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
+        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
         $crawler = new Crawler($html);
 
         return $crawler;
@@ -185,7 +186,11 @@ class FireEmployees extends Module
                         }
                     }
                 }
+
+                Scheduler::getInstance()->waitBeforeNextAction();
             });
+
+            Scheduler::getInstance()->waitBeforeNextAction();
 
             $page++;
         } while (true);

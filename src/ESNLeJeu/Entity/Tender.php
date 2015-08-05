@@ -70,15 +70,16 @@ class Tender
      * @param $weeks
      * @param $budget
      * @param $page
+     * @param $tradePromotion
      */
-    public function __construct($id, $customer, $careerProfile, $weeks, $budget, $page)
+    public function __construct($id, $customer, $careerProfile, $weeks, $budget, $page, $tradePromotion)
     {
         $this->id               = $id;
         $this->customer         = $customer;
         $this->careerProfile    = $careerProfile;
         $this->weeks            = $weeks;
         $this->budget           = $budget;
-        $this->businessProposal = round($budget * Options::BID_TRADE_PROMOTION);
+        $this->businessProposal = round($budget * $tradePromotion);
         $this->page             = $page;
     }
 }

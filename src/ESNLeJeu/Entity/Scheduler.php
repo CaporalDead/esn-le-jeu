@@ -35,6 +35,9 @@ class Scheduler implements ConfigAwareInterface
         return self::$instance;
     }
 
+    /**
+     * @return bool
+     */
     public function isDevelopment()
     {
         return $this->isDevelopment;
@@ -109,6 +112,18 @@ class Scheduler implements ConfigAwareInterface
         }
     }
 
+    public function waitBeforeNextAction()
+    {
+        if (! $this->isDevelopment()) {
+            usleep(rand(876543, 1598765));
+        } else {
+            usleep(10000);
+        }
+    }
+
+    /**
+     * @deprecated
+     */
     public function waitBeforeNextBid()
     {
         if (! $this->isDevelopment()) {
@@ -118,6 +133,9 @@ class Scheduler implements ConfigAwareInterface
         }
     }
 
+    /**
+     * @deprecated
+     */
     public function waitBeforeNextComplaint()
     {
         if (! $this->isDevelopment()) {

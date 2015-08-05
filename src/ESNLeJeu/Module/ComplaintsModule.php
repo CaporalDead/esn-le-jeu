@@ -5,10 +5,17 @@ namespace Jhiino\ESNLeJeu\Module;
 use Exception;
 use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Helper\Node;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
 
-class ComplaintsModule extends Module
+/**
+ * @deprecated
+ */
+class ComplaintsModule extends Module implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     /**
      * @var string
      */
@@ -22,7 +29,7 @@ class ComplaintsModule extends Module
 
         do {
             $url      = vsprintf('%s?P=%s', [self::URI, $page]);
-            $body     = $this->client->getConnection()->get($url)->send()->getBody(true);
+            $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
             $crawler  = new Crawler($body);
             $children = $crawler->filter(self::CSS_FILTER);
 
@@ -46,7 +53,7 @@ class ComplaintsModule extends Module
                         'numrow' => $numrow
                     ];
 
-                    $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send();
+                    $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
 
                     // Tempo random
                     Scheduler::getInstance()->waitBeforeNextComplaint();
@@ -57,7 +64,7 @@ class ComplaintsModule extends Module
                         'id_r'   => $id,
                         'numrow' => $numrow
                     ];
-                    $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, [], $post)->send()->getBody(true);
+                    $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
                     $crawler = new Crawler($body);
 
                     // Tempo random
@@ -65,12 +72,16 @@ class ComplaintsModule extends Module
 
                     // Traitement de la réponse pour les statistiques
                     if (null != $crawler->filter('span.positif')->getNode(0)) {
+                        $this->logger->debug('Youpi j\'ai réussi à baratiner.');
                         $positif++;
                     } elseif (null != $crawler->filter('span.negatif')->getNode(0)) {
+                        $this->logger->debug('Fuck j\'ai pas réussi à baratiner.');
                         $negatif++;
                     } else {
                         throw new Exception('Erreur de baratin!');
                     }
+
+                    $this->logger->info(sprintf('Résultat du baratin : + %s/ - %s', $positif, $negatif));
                 }
             });
 
