@@ -3,7 +3,7 @@
 namespace Jhiino\ESNLeJeu\Command;
 
 use Jhiino\ESNLeJeu\Client;
-use Jhiino\ESNLeJeu\Exception\ConfigFileNotFound;
+use Jhiino\ESNLeJeu\Exception\Config\ConfigFileNotFound;
 use Jhiino\ESNLeJeu\Logger\NeedToBeFlushedInterface;
 use Jhiino\ESNLeJeu\Mailer;
 use Jhiino\ESNLeJeu\Orchestra;

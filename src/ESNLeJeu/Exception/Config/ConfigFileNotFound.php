@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhiino\ESNLeJeu\Exception;
+namespace Jhiino\ESNLeJeu\Exception\Config;
 
 use Exception;
 
