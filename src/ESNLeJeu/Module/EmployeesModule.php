@@ -44,15 +44,24 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
      *
      * @return Employee[]
      */
-    public static function idlesForCareerProfile(Client $client, Tender $tender)
+    public static function idlesForCareerProfile(Client $client, Tender $tender, $colorchange)
     {
         /** @var Employee[] $idles */
         $idles         = [];
         $careerProfile = $tender->careerProfile;
-        $url           = vsprintf('%s?id_ao=%s', [self::IDLES_URI, $tender->id]);
-        $html          = $client->getConnection()->get($url)->getBody()->getContents();
-        $crawler       = new Crawler($html);
-        $children      = $crawler->filter('#choix-emploi tr:nth-child(n+2)');
+//        $html = $client->get('/place-de-marche.php');
+//        $crawler  = new Crawler($html);
+//        $c = $crawler->filter('span.colorchange')->html();
+//        $c = urldecode($c);
+//
+        $html          = $client->get(self::IDLES_URI, ['id_ao' => $tender->id, 'c' => $colorchange]);
+
+        print_r(['id_ao' => $tender->id, 'c' => $colorchange]);
+        var_dump($html);
+        die;
+
+        $crawler  = new Crawler($html);
+        $children = $crawler->filter('#choix-emploi tr:nth-child(n+2)');
 
         if ($children->count() > 0) {
             $children->each(function (Crawler $child) use (&$idles, $careerProfile) {
@@ -116,8 +125,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
         $page          = 1;
 
         do {
-            $url      = vsprintf(self::APPLICANTS_URI . '?C=%s&P=%s', [$careerProfile, $page]);
-            $html     = $client->getConnection()->get($url)->getBody()->getContents();
+            $html     = $client->getConnection()->get(self::APPLICANTS_URI, ['C' => $careerProfile, 'P' => $page]);
             $crawler  = new Crawler($html);
             $children = $crawler->filter(self::CSS_FILTER);
 
@@ -193,7 +201,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
             'numrow'  => rand(1, 30),
             'propsal' => ((Ressource::TYPE_EMPLOYEE == $newApplicant->type) ? $newApplicant->pay : $newApplicant->cost)
         ];
-        $html    = $client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $html    = $client->getConnection()->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         if (null != $crawler->filter('span.positif')->getNode(0)) {

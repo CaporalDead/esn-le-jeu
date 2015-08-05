@@ -57,8 +57,7 @@ class Bid extends Module
             $page = 1;
 
             do {
-                $url      = vsprintf('%s?C=%s&P=%s', [self::URI, $careerProfile, $page]);
-                $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
+                $body     = $this->client->get(self::URI, $careerProfile, ['C' => $careerProfile, 'P' => $page]);
                 $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 

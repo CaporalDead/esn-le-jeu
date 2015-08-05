@@ -41,7 +41,7 @@ class FireEmployees extends Module
     protected function parsePage($page)
     {
         $url      = vsprintf('%s?C=%s&P=%s', [self::URI_FIRE, 'STS', $page]);
-        $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
+        $body     = $this->client->get($url);
         $crawler  = new Crawler($body);
         $children = $crawler->filter(self::CSS_FILTER);
 
@@ -75,7 +75,7 @@ class FireEmployees extends Module
             'id_r'   => $id,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('Les détails de l\'employé [%s %s]', $id, $numRow));
@@ -109,7 +109,7 @@ class FireEmployees extends Module
             'id_r'   => $idToFire,
             'numrow' => $numRow
         ];
-        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $html = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         return $crawler;
@@ -141,7 +141,7 @@ class FireEmployees extends Module
             'id_r'   => $idToFire,
             'numrow' => $numRow
         ];
-        $html = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $html = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         return $crawler;

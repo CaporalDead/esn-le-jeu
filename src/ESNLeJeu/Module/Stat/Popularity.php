@@ -17,7 +17,7 @@ class Popularity extends Module
      */
     public function fire()
     {
-        $body    = $this->client->getConnection()->get(self::HOME_URI)->getBody()->getContents();
+        $body    = $this->client->get(self::HOME_URI);
         $crawler = new Crawler($body);
 
         preg_match('!\d+(?:\.\d+)?!', $crawler->filter('div.meter > span')->attr('style'), $matches);

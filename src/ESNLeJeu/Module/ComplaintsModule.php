@@ -28,8 +28,7 @@ class ComplaintsModule extends Module implements LoggerAwareInterface
         $page    = 1;
 
         do {
-            $url      = vsprintf('%s?P=%s', [self::URI, $page]);
-            $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
+            $body     = $this->client->get(self::URI, ['P' => $page]);
             $crawler  = new Crawler($body);
             $children = $crawler->filter(self::CSS_FILTER);
 
@@ -53,7 +52,7 @@ class ComplaintsModule extends Module implements LoggerAwareInterface
                         'numrow' => $numrow
                     ];
 
-                    $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                    $this->client->post(self::AJAX_ACTION_URI, $post);
 
                     // Tempo random
                     Scheduler::getInstance()->waitBeforeNextComplaint();
@@ -64,7 +63,7 @@ class ComplaintsModule extends Module implements LoggerAwareInterface
                         'id_r'   => $id,
                         'numrow' => $numrow
                     ];
-                    $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                    $body    = $this->client->post(self::AJAX_ACTION_URI, $post);
                     $crawler = new Crawler($body);
 
                     // Tempo random

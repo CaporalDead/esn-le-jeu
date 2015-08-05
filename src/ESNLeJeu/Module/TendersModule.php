@@ -49,6 +49,8 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
      */
     protected $hire;
 
+    protected $colorchange = null;
+
     /*
      * @return Tender[]
      */
@@ -61,8 +63,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
             $page = 1;
 
             do {
-                $url      = vsprintf('%s?C=%s&P=%s', [self::URI, $careerProfile, $page]);
-                $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
+                $body     = $this->client->get(self::URI, ['C' => $careerProfile, 'P' => $page]);
                 $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 
@@ -148,6 +149,12 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
         $allIdles      = [];
         $allApplicants = [];
 
+        if (null === $this->colorchange) {
+            $body    = $this->client->get(self::URI);
+            $crawler = new Crawler($body);
+            $this->colorchange = urldecode($crawler->filter('span.colorchange')->html());
+        }
+
         do {
             // Indexer le tableau
             $tenders = array_values($tenders);
@@ -160,7 +167,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
             if ($tender->weeks >= $this->minWeeks) {
                 // 1 - Pour chaque offre, essayer de placer un idle
                 /** @var Ressource[] $idles */
-                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender);
+                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender, $this->colorchange);
                 $allIdles += $idles;
 
                 /** @var Ressource $ressource */
@@ -238,7 +245,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
                 'num_cand' => $ressource->id,
                 'typ_cand' => $ressource::CODE
             ];
-            $body    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+            $body    = $this->client->post(self::AJAX_ACTION_URI, $post);
             $crawler = new Crawler($body);
             $node    = Node::nodeExists($crawler, 'td.pannel_e > b');
 

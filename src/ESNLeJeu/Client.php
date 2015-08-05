@@ -72,7 +72,7 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
             'cookies'  => true,
             'headers'  => [
                 'Upgrade-Insecure-Requests' => '1',
-                'User-Agent'                => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0',
+                'User-Agent'                => sprintf('Mozilla/5.0 (Windows (NT 6.1; WOW64; rv:39.0) Gecko/%s Firefox/39.0', time()),
             ],
         ]);
     }
@@ -120,13 +120,14 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
     }
 
     /**
-     * @param $uri
+     * @param string $uri
+     * @param array $params
      *
      * @return string
      */
-    public function get($uri)
+    public function get($uri, array $params = [])
     {
-        $response = $this->getConnection()->get($uri);
+        $response = $this->getConnection()->get($uri, ['query' => $params]);
 
         return $response->getBody()->getContents();
     }

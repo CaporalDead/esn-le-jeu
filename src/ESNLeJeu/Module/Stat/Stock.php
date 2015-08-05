@@ -18,7 +18,7 @@ class Dashboard extends Module
      */
     public function fire()
     {
-        $body    = $this->client->getConnection()->get(self::HOME_URI)->getBody()->getContents();
+        $body    = $this->client->get(self::HOME_URI);
         $crawler = new Crawler($body);
 
         try {

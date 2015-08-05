@@ -28,7 +28,7 @@ class StatsModule extends Module implements LoggerAwareInterface
      */
     public function popularity()
     {
-        $body    = $this->client->getConnection()->get(self::HOME_URI)->getBody()->getContents();
+        $body    = $this->client->get(self::HOME_URI);
         $crawler = new Crawler($body);
 
         preg_match('!\d+(?:\.\d+)?!', $crawler->filter('div.meter > span')->attr('style'), $matches);
@@ -43,12 +43,12 @@ class StatsModule extends Module implements LoggerAwareInterface
     public function tenders()
     {
         // Offres gagnées
-        $body    = $this->client->getConnection()->get(self::PROPALES_URI . '?C=PG')->getBody()->getContents();
+        $body    = $this->client->get(self::PROPALES_URI, ['C' => 'PG']);
         $crawler = new Crawler($body);
         $won     = preg_replace('/\D/', '', $crawler->filter('#main-content > div.nav-results > div')->html());
 
         // Offres perdues
-        $body    = $this->client->getConnection()->get(self::PROPALES_URI . '?C=PP')->getBody()->getContents();
+        $body    = $this->client->get(self::PROPALES_URI, ['C' => 'PP']);
         $crawler = new Crawler($body);
         $lost    = preg_replace('/\D/', '', $crawler->filter('#main-content > div.nav-results > div')->html());
 
@@ -69,7 +69,7 @@ class StatsModule extends Module implements LoggerAwareInterface
 
     public function stock()
     {
-        $body    = $this->client->getConnection()->get(self::HOME_URI)->getBody()->getContents();
+        $body    = $this->client->get(self::HOME_URI);
         $crawler = new Crawler($body);
 
         try {
@@ -96,7 +96,7 @@ class StatsModule extends Module implements LoggerAwareInterface
 
     public function dashboard()
     {
-        $body    = $this->client->getConnection()->get(self::HOME_URI)->getBody()->getContents();
+        $body    = $this->client->get(self::HOME_URI);
         $crawler = new Crawler($body);
 
         try {

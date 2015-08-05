@@ -73,11 +73,8 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
         }
 
         do {
-            $url  = vsprintf('%s?C=%s&P=%s', [self::URI_FIRE, 'STS', $page]);
-            $body = $this->client->getConnection()->get($url)->getBody()->getContents();
-
-            $crawler = new Crawler($body);
-
+            $body     = $this->client->get(self::URI_FIRE, ['C' => 'STS', 'P' => $page]);
+            $crawler  = new Crawler($body);
             $children = $crawler->filter(self::CSS_FILTER);
 
             if (0 == $children->count()) {
@@ -98,7 +95,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                         'id_r'   => $id,
                         'numrow' => $numrow
                     ];
-                    $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                    $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
                     $crawler = new Crawler($html);
                     $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Virer');
 
@@ -110,7 +107,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                             'numrow' => $numrow
                         ];
 
-                        $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                        $this->client->post(self::AJAX_ACTION_URI, $post);
 
                         // Confirmer
                         $post = [
@@ -119,7 +116,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                             'numrow' => $numrow
                         ];
 
-                        $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                        $this->client->post(self::AJAX_ACTION_URI, $post);
 
                         $this->logger->debug('Et hop un employé mis à la porte');
 
@@ -174,8 +171,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
             do {
                 $this->logger->debug(sprintf('On affiche la page %s', $page));
 
-                $url      = vsprintf('%s?C=%s&P=%s', [self::URI_RENEGOTIATE, $type, $page]);
-                $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
+                $body     = $this->client->get(self::URI_RENEGOTIATE, ['C' => $type, 'P' => $page]);
                 $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 
@@ -201,7 +197,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                             'id_r'   => $id,
                             'numrow' => $numrow
                         ];
-                        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                        $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
                         $crawler = new Crawler($html);
                         $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.tuto-renego', 'Renégocier', true);
 
@@ -215,7 +211,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                                 'numrow' => $numrow
                             ];
 
-                            $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                            $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
                             $crawler = new Crawler($html);
                             $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', '5% - Négociation amicale', true);
 
@@ -227,7 +223,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                                     'id_r'   => $id,
                                     'numrow' => $numrow
                                 ];
-                                $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                                $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
                                 $crawler = new Crawler($html);
                                 $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div.curved2 > div > a.positif', 'Accepter', true);
 
@@ -239,7 +235,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                                         'numrow' => $numrow
                                     ];
 
-                                    $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                                    $this->client->post(self::AJAX_ACTION_URI, $post);
 
                                     $this->logger->debug('Une renégo de contrat à 5%');
 
@@ -261,7 +257,7 @@ class AuditModule extends Module implements ConfigAwareInterface, LoggerAwareInt
                                     'numrow' => $numrow
                                 ];
 
-                                $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+                                $this->client->post(self::AJAX_ACTION_URI, $post);
                             }
                         }
                     } else {

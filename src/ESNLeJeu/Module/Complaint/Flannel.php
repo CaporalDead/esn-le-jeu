@@ -24,8 +24,7 @@ class Flannel extends Module
      */
     protected function parsePage($page)
     {
-        $url      = vsprintf('%s?P=%s', [self::URI_DOLEANCES, $page]);
-        $body     = $this->client->getConnection()->get($url)->getBody()->getContents();
+        $body     = $this->client->get(self::URI_DOLEANCES, ['P' => $page]);
         $crawler  = new Crawler($body);
         $children = $crawler->filter(self::CSS_FILTER);
 
@@ -57,7 +56,7 @@ class Flannel extends Module
             'id_r'   => $id,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         $this->logger->debug(sprintf('Les détails de l\'employé [%s %s]', $id, $numRow));
@@ -82,7 +81,7 @@ class Flannel extends Module
             'id_r'   => $idToFlannel,
             'numrow' => $numRow
         ];
-        $html    = $this->client->getConnection()->post(self::AJAX_ACTION_URI, ['form_params' => $post])->getBody()->getContents();
+        $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         if (null != $crawler->filter('span.positif')->getNode(0)) {
