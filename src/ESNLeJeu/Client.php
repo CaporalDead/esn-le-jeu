@@ -229,7 +229,8 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
      */
     public function getColorChange($uri = '', array $get = [], $debug = false)
     {
-        $crawler = $this->get($uri, $get, $debug);
+        $html    = $this->get($uri, $get, $debug);
+        $crawler = new Crawler($html);
         $node    = Node::nodeExists($crawler, self::FILTER_COLORCHANGE);
 
         if ($node) {
