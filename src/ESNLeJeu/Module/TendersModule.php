@@ -49,8 +49,6 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
      */
     protected $hire;
 
-    protected $colorchange = null;
-
     /*
      * @return Tender[]
      */
@@ -149,12 +147,6 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
         $allIdles      = [];
         $allApplicants = [];
 
-        if (null === $this->colorchange) {
-            $body    = $this->client->get(self::URI);
-            $crawler = new Crawler($body);
-            $this->colorchange = urldecode($crawler->filter('span.colorchange')->html());
-        }
-
         do {
             // Indexer le tableau
             $tenders = array_values($tenders);
@@ -167,7 +159,7 @@ class TendersModule extends Module implements ConfigAwareInterface, LoggerAwareI
             if ($tender->weeks >= $this->minWeeks) {
                 // 1 - Pour chaque offre, essayer de placer un idle
                 /** @var Ressource[] $idles */
-                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender, $this->colorchange);
+                $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender);
                 $allIdles += $idles;
 
                 /** @var Ressource $ressource */

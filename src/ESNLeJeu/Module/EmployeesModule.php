@@ -44,20 +44,21 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
      *
      * @return Employee[]
      */
-    public static function idlesForCareerProfile(Client $client, Tender $tender, $colorchange)
+    public static function idlesForCareerProfile(Client $client, Tender $tender)
     {
         /** @var Employee[] $idles */
         $idles         = [];
         $careerProfile = $tender->careerProfile;
-//        $html = $client->get('/place-de-marche.php');
-//        $crawler  = new Crawler($html);
-//        $c = $crawler->filter('span.colorchange')->html();
-//        $c = urldecode($c);
+
+        $html          = $client->get('/place-de-marche.php', ['C' => $careerProfile, 'P' => $tender->page]);
+        $crawler       = new Crawler($html);
+        $colorchange   = $crawler->filter('span.colorchange')->html();
+        $colorchange   = urldecode($colorchange);
 //
-        $html          = $client->get(self::IDLES_URI, ['id_ao' => $tender->id, 'c' => $colorchange]);
+        $html = $client->get(self::IDLES_URI, ['id_ao' => $tender->id, 'c' => $colorchange]);
 
         print_r(['id_ao' => $tender->id, 'c' => $colorchange]);
-        var_dump($html);
+        print_r($html);
         die;
 
         $crawler  = new Crawler($html);
