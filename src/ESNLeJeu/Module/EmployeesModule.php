@@ -10,6 +10,7 @@ use Jhiino\ESNLeJeu\Entity\NewApplicant;
 use Jhiino\ESNLeJeu\Entity\Options;
 use Jhiino\ESNLeJeu\Entity\Ressource;
 use Jhiino\ESNLeJeu\Entity\Tender;
+use Jhiino\ESNLeJeu\Helper\Filter;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\DomCrawler\Crawler;
@@ -50,17 +51,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
         $idles         = [];
         $careerProfile = $tender->careerProfile;
 
-        $html          = $client->get('/place-de-marche.php', ['C' => $careerProfile, 'P' => $tender->page]);
-        $crawler       = new Crawler($html);
-        $colorchange   = $crawler->filter('span.colorchange')->html();
-        $colorchange   = urldecode($colorchange);
-//
-        $html = $client->get(self::IDLES_URI, ['id_ao' => $tender->id, 'c' => $colorchange]);
-
-        print_r(['id_ao' => $tender->id, 'c' => $colorchange]);
-        print_r($html);
-        die;
-
+        $html = $client->get(self::IDLES_URI, ['id_ao' => $tender->id, 'c' => $tender->colorChange]);
         $crawler  = new Crawler($html);
         $children = $crawler->filter('#choix-emploi tr:nth-child(n+2)');
 
@@ -86,24 +77,24 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
     public static function parseIdleFromHtml(Crawler $crawler, $careerProfile)
     {
         $temp = explode(',', $crawler->filter('td:nth-child(4)')->filter('a.btn')->attr('onclick'));
-        $id   = preg_replace('/\D/', '', $temp[1]);
-        $name = filter_var(trim($crawler->filter('td:nth-child(1)')->html()), FILTER_SANITIZE_STRING);
+        $id   = Filter::getInt($temp[1]);
+        $name = Filter::getString($crawler->filter('td:nth-child(1)')->html());
 
         preg_match('/\((S|F){1}\)/', $name, $matches);
 
-        $type = reset($matches);
-        $cost = preg_replace('/\D/', '', $crawler->filter('td:nth-child(3)')->html());
-        $src  = filter_var($crawler->filter('td:nth-child(2)')->html(), FILTER_SANITIZE_STRING);
+        $type      = reset($matches);
+        $cost      = Filter::getInt($crawler->filter('td:nth-child(3)')->html());
+        $situation = Filter::getString($crawler->filter('td:nth-child(2)')->html());
 
-        switch (utf8_decode($src)) {
+        switch (utf8_decode($situation)) {
             // Employé
             case 'intercontrat' :
-                return new Employee($id, $name, $careerProfile, $type, null, $cost);
+                return new Employee($id, $name, $careerProfile, 0, $type, $cost);
                 break;
 
             // Promesse d'embauche
             case 'promesse signée':
-                return new Applicant($id, $name, $careerProfile, $type, null, $cost);
+                return new Applicant($id, $name, $careerProfile, 0, $type, $cost);
                 break;
 
             // Intercontrats des membres du groupe
@@ -121,6 +112,7 @@ class EmployeesModule extends Module implements ConfigAwareInterface, LoggerAwar
      */
     public static function applicantsForCareerProfile(Client $client, $careerProfile)
     {
+        # TODO
         /** @var Applicant[] $newApplicants */
         $newApplicants = [];
         $page          = 1;

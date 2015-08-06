@@ -64,6 +64,11 @@ class Tender
     public $margin = 0.0;
 
     /**
+     * @var string
+     */
+    public $colorChange = null;
+
+    /**
      * @param $id
      * @param $customer
      * @param $careerProfile

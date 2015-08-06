@@ -6,6 +6,7 @@ use Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Cookie\CookieJar;
 use Jhiino\ESNLeJeu\Config\ConfigAwareInterface;
+use Jhiino\ESNLeJeu\Helper\Filter;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -213,7 +214,46 @@ class Client implements ConfigAwareInterface, LoggerAwareInterface
 
         $response = $this->getConnection()->get($uri, $options);
 
+        usleep(400000);
+
         return $response->getBody()->getContents();
+    }
+
+    /**
+     * @param string     $uri
+     * @param array      $get
+     * @param bool|false $debug
+     *
+     * @return string
+     * @throws Exception
+     */
+    public function getColorChange($uri = '', array $get = [], $debug = false)
+    {
+        $crawler = $this->get($uri, $get, $debug);
+        $node    = Node::nodeExists($crawler, self::FILTER_COLORCHANGE);
+
+        if ($node) {
+            return Filter::getString($node->html());
+        }
+
+        throw new Exception('ColorChange not found !');
+    }
+
+    /**
+     * @param Crawler $crawler
+     *
+     * @return string
+     * @throws Exception
+     */
+    public function getColorChangeFromCrawler(Crawler $crawler)
+    {
+        $node = Node::nodeExists($crawler, self::FILTER_COLORCHANGE);
+
+        if ($node) {
+            return Filter::getString($node->html());
+        }
+
+        throw new Exception('ColorChange not found !');
     }
 
     /**

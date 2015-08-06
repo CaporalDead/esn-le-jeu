@@ -74,13 +74,14 @@ abstract class Ressource
      * @param      $id
      * @param      $name
      * @param      $careerProfile
+     * @param      $page
      * @param      $type
      * @param null $pay
      * @param null $cost
      *
      * @throws Exception
      */
-    public function __construct($id, $name, $careerProfile, $type, $pay = null, $cost = null)
+    public function __construct($id, $name, $careerProfile, $page, $type, $pay = null, $cost = null)
     {
         $this->id            = $id;
         $this->name          = $name;
