@@ -22,10 +22,16 @@ class Scheduler implements ConfigAwareInterface
      */
     protected static $instance;
 
+    /**
+     * Singleton
+     */
     private function __construct()
     {
     }
 
+    /**
+     * @return Scheduler
+     */
     public static function getInstance()
     {
         if (null === self::$instance) {
@@ -72,9 +78,9 @@ class Scheduler implements ConfigAwareInterface
         $now = new DateTime();
 
         $startTime = new DateTime();
-        $startTime->setTime(6, 0, 0);
+        $stopTime  = new DateTime();
 
-        $stopTime = new DateTime();
+        $startTime->setTime(6, 0, 0);
         $stopTime->setTime(6, 59, 59);
 
         return (($now >= $startTime) && ($now <= $stopTime));
@@ -90,12 +96,22 @@ class Scheduler implements ConfigAwareInterface
         $now = new DateTime();
 
         $startTime = new DateTime();
-        $startTime->setTime(6, 0, 0);
+        $stopTime  = new DateTime();
 
-        $stopTime = new DateTime();
+        $startTime->setTime(6, 0, 0);
         $stopTime->setTime(23, 59, 59);
 
         return (($now >= $startTime) && ($now <= $stopTime)) || $this->isDevelopment();
+    }
+
+    /**
+     * Tempo
+     */
+    public function waitForNextQuery()
+    {
+        if (! $this->isDevelopment()) {
+            usleep(rand(400000, 800000));
+        }
     }
 
     public function waitForStart()
@@ -109,39 +125,6 @@ class Scheduler implements ConfigAwareInterface
     {
         if (! $this->isDevelopment()) {
             sleep(rand(1, 29));
-        }
-    }
-
-    public function waitBeforeNextAction()
-    {
-        if (! $this->isDevelopment()) {
-            usleep(rand(876543, 1598765));
-        } else {
-            usleep(10000);
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    public function waitBeforeNextBid()
-    {
-        if (! $this->isDevelopment()) {
-            usleep(rand(876543, 1598765));
-        } else {
-            usleep(10000);
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    public function waitBeforeNextComplaint()
-    {
-        if (! $this->isDevelopment()) {
-            usleep(rand(100000, 456789));
-        } else {
-            usleep(10000);
         }
     }
 

@@ -54,18 +54,20 @@ class ConfigCommand extends Command
             ],
             'modules'   => [
                 'everytime' => [
-                    ['\\Jhiino\\ESNLeJeu\\Module\\StatsModule' => 'popularity'],
-                    ['\\Jhiino\\ESNLeJeu\\Module\\StatsModule' => 'tenders'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Stat\\Popularity'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Stat\\Tender'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Stat\\Stock'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Stat\\Dashboard'],
                 ],
                 'audit'     => [
-                    ['\\Jhiino\\ESNLeJeu\\Module\\AuditModule' => 'fireEmployees'],
-                    ['\\Jhiino\\ESNLeJeu\\Module\\AuditModule' => 'renegotiateContracts'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Audit\\FireEmployees'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Audit\\RenegociateContracts'],
                 ],
                 'flannel'   => [
-                    ['\\Jhiino\\ESNLeJeu\\Module\\ComplaintsModule' => 'flannel'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Complaint\\Flannel'],
                 ],
                 'business'  => [
-                    ['\\Jhiino\\ESNLeJeu\\Module\\TendersModule' => 'bidOnTenders'],
+                    ['\Jhiino\\ESNLeJeu\\Module\\Tender\\Bid'],
                 ],
             ],
             'tenders'   => [

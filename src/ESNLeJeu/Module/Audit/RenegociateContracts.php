@@ -3,7 +3,6 @@
 namespace Jhiino\ESNLeJeu\Module\Audit;
 
 use Jhiino\ESNLeJeu\Entity\ObjectDetails;
-use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
@@ -326,11 +325,7 @@ class RenegociateContracts extends Module
                             }
                         }
                     }
-
-                    Scheduler::getInstance()->waitBeforeNextAction();
                 });
-
-                Scheduler::getInstance()->waitBeforeNextAction();
 
                 $page++;
             } while (true);

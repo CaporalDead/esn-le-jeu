@@ -3,7 +3,6 @@
 namespace Jhiino\ESNLeJeu\Module\Complaint;
 
 use Jhiino\ESNLeJeu\Entity\ObjectDetails;
-use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
@@ -119,11 +118,7 @@ class Flannel extends Module
                         $numberOfEmployeesFlanneled += $result;
                     }
                 }
-
-                Scheduler::getInstance()->waitBeforeNextAction();
             });
-
-            Scheduler::getInstance()->waitBeforeNextAction();
 
             $page++;
         } while (true);

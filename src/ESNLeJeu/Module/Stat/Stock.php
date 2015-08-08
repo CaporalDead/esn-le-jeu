@@ -6,7 +6,7 @@ use Exception;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
 
-class Dashboard extends Module
+class Stock extends Module
 {
     /**
      * @var string

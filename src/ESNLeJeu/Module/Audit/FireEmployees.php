@@ -3,7 +3,6 @@
 namespace Jhiino\ESNLeJeu\Module\Audit;
 
 use Jhiino\ESNLeJeu\Entity\ObjectDetails;
-use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Module;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -96,7 +95,7 @@ class FireEmployees extends Module
     {
         $this->logger->debug('On cherche le bouton "Virer"');
 
-        $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Virer');
+        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Virer');
 
         if (! $button) {
             $this->logger->debug('Pas de bouton "Virer"');
@@ -104,12 +103,12 @@ class FireEmployees extends Module
             return false;
         }
 
-        $post = [
+        $post    = [
             'a'      => 'V',
             'id_r'   => $idToFire,
             'numrow' => $numRow
         ];
-        $html = $this->client->post(self::AJAX_ACTION_URI, $post);
+        $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         return $crawler;
@@ -128,7 +127,7 @@ class FireEmployees extends Module
     {
         $this->logger->debug('On cherche le bouton "Confirmer"');
 
-        $button  = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Confirmer');
+        $button = Node::buttonExists($crawler, 'td:nth-child(1) > div > a.btn', 'Confirmer');
 
         if (! $button) {
             $this->logger->debug('Pas de bouton "Confirmer"');
@@ -136,12 +135,12 @@ class FireEmployees extends Module
             return false;
         }
 
-        $post = [
+        $post    = [
             'a'      => 'VC',
             'id_r'   => $idToFire,
             'numrow' => $numRow
         ];
-        $html = $this->client->post(self::AJAX_ACTION_URI, $post);
+        $html    = $this->client->post(self::AJAX_ACTION_URI, $post);
         $crawler = new Crawler($html);
 
         return $crawler;
@@ -186,11 +185,7 @@ class FireEmployees extends Module
                         }
                     }
                 }
-
-                Scheduler::getInstance()->waitBeforeNextAction();
             });
-
-            Scheduler::getInstance()->waitBeforeNextAction();
 
             $page++;
         } while (true);

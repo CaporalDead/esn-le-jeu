@@ -64,7 +64,7 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
 
     public function run()
     {
-        $this->logger->info('------------------------------');
+        $this->logger->info(str_repeat('-', 30));
         $this->logger->info('Actions du ' . date('Y-m-d H:i:s'));
 
         Scheduler::getInstance()->waitForStart();
@@ -74,13 +74,13 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
         $this->executeWhileFlannel();
         $this->executeWhileBusiness();
 
-        $this->logger->info('------------------------------');
+        $this->logger->info(str_repeat('-', 30));
     }
 
     protected function executeEverytime()
     {
-        foreach ($this->everyTime as $moduleInfo) {
-            $this->execute($moduleInfo);
+        foreach ($this->everyTime as $module) {
+            $this->execute($module);
         }
     }
 
@@ -90,8 +90,8 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
             return;
         }
 
-        foreach ($this->audit as $moduleInfo) {
-            $this->execute($moduleInfo);
+        foreach ($this->audit as $module) {
+            $this->execute($module);
         }
     }
 
@@ -101,8 +101,8 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
             return;
         }
 
-        foreach ($this->flannel as $moduleInfo) {
-            $this->execute($moduleInfo);
+        foreach ($this->flannel as $module) {
+            $this->execute($module);
         }
     }
 
@@ -112,8 +112,8 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
             return;
         }
 
-        foreach ($this->business as $moduleInfo) {
-            $this->execute($moduleInfo);
+        foreach ($this->business as $module) {
+            $this->execute($module);
         }
     }
 
@@ -155,11 +155,9 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
         ];
     }
 
-    protected function execute($moduleInfo)
+    protected function execute($moduleClassName)
     {
-        $moduleClassName = key($moduleInfo);
-        $action          = current($moduleInfo);
-        $module          = new $moduleClassName($this->client);
+        $module = new $moduleClassName($this->client);
 
         if ($module instanceof LoggerAwareInterface) {
             if (null === $this->logger) {
@@ -173,7 +171,7 @@ class Orchestra implements ConfigAwareInterface, LoggerAwareInterface
             $module->applyConfig($this->config);
         }
 
-        $module->$action();
+        $module->fire();
 
         Scheduler::getInstance()->waitBeforeNextStep();
     }

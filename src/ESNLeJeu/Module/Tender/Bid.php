@@ -5,8 +5,8 @@ namespace Jhiino\ESNLeJeu\Module\Tender;
 use Jhiino\ESNLeJeu\Entity\Applicant;
 use Jhiino\ESNLeJeu\Entity\CareerProfiles;
 use Jhiino\ESNLeJeu\Entity\NewApplicant;
-use Jhiino\ESNLeJeu\Entity\Scheduler;
 use Jhiino\ESNLeJeu\Entity\Tender;
+use Jhiino\ESNLeJeu\Helper\Filter;
 use Jhiino\ESNLeJeu\Helper\Node;
 use Jhiino\ESNLeJeu\Module;
 use Jhiino\ESNLeJeu\Module\EmployeesModule;
@@ -88,17 +88,17 @@ class Bid extends Module
 
     /**
      * @param Crawler $crawler
-     * @param string $careerProfile
-     * @param int    $page
+     * @param string  $careerProfile
+     * @param int     $page
      *
      * @return Tender
      */
     protected function parseFromHtml(Crawler $crawler, $careerProfile, $page)
     {
-        $id       = preg_replace('/\D/', '', $crawler->attr('id'));
-        $customer = filter_var(trim($crawler->filter('td:nth-child(1)')->html()), FILTER_SANITIZE_STRING);
-        $weeks    = preg_replace('/\D/', '', $crawler->filter('td:nth-child(3)')->html());
-        $budget   = preg_replace('/\D/', '', $crawler->filter('td:nth-child(4)')->html());
+        $id       = Filter::getInt($crawler->attr('id'));
+        $customer = Filter::getString($crawler->filter('td:nth-child(1)')->html());
+        $weeks    = Filter::getInt($crawler->filter('td:nth-child(3)')->html());
+        $budget   = Filter::getInt($crawler->filter('td:nth-child(4)')->html());
 
         return new Tender($id, $customer, $careerProfile, $weeks, $budget, $page, $this->tradePromotion);
     }
@@ -150,6 +150,15 @@ class Bid extends Module
 
             // Contrôler le nombre minimal de semaines
             if ($tender->weeks >= $this->minWeeks) {
+                // ColorChange
+                $colorChange = $this->client->getColorChange(self::URI, [
+                    'C' => $tender->careerProfile,
+                    'P' => $tender->page
+                ]);
+
+                // Mise à jour du colorChange
+                $tender->colorChange = $colorChange;
+
                 // 1 - Pour chaque offre, essayer de placer un idle
                 /** @var Ressource[] $idles */
                 $idles = EmployeesModule::idlesForCareerProfile($this->client, $tender);
@@ -178,6 +187,14 @@ class Bid extends Module
                         if ($applicant instanceof Applicant) {
                             $tender->ressource = $applicant;
                             $allApplicants[]   = $applicant;
+
+                            $colorChange = $this->client->getColorChange(self::URI, [
+                                'C' => $tender->careerProfile,
+                                'P' => $tender->page
+                            ]);
+
+                            // Mise à jour du colorChange
+                            $tender->colorChange = $colorChange;
                         } else {
                             $tender->margin    = 0.0;
                             $tender->ressource = null;
@@ -191,8 +208,6 @@ class Bid extends Module
                         // Stats
                         $bids[] = $tender;
                     }
-
-                    Scheduler::getInstance()->waitBeforeNextAction();
                 }
             }
 
@@ -203,6 +218,46 @@ class Bid extends Module
         $this->logger->info(sprintf('Inter missions à placer : %s', count($allIdles)));
         $this->logger->info(sprintf('Réponses aux appels d\'offres : %s', count($bids)));
         $this->logger->info(sprintf('Recrutements : %s', count($allApplicants)));
+    }
+
+    /**
+     * @param Tender $tender
+     *
+     * @return bool
+     */
+    private function bid(Tender $tender)
+    {
+        $return    = false;
+        $ressource = $tender->ressource;
+
+        if ($ressource instanceof Ressource && null != $ressource->id && $tender->margin >= $this->minInterestMargin) {
+            $post    = [
+                'a'           => 'AOC',
+                'id_ao'       => $tender->id,
+                'numrow'      => rand(1, 30),
+                'tarifv'      => $tender->businessProposal,
+                'num_cand'    => $ressource->id,
+                'typ_cand'    => $ressource::CODE,
+                'colorchange' => $tender->colorChange,
+            ];
+            $body    = $this->client->post(self::AJAX_ACTION_URI, $post);
+            $crawler = new Crawler($body);
+            $node    = Node::nodeExists($crawler, '.pannel_e > b:nth-child(2)');
+
+            if ($node && 0 === stripos($node->html(), 'Bravo')) {
+                $return = true;
+            }
+        }
+
+        $this->logger->debug(vsprintf('%s : Offre [%s], Ressource [%s], Profil [%s], Marge brute [%s]', [
+            ($return) ? 'Placement OK' : 'Placement KO',
+            $tender->id,
+            $tender->ressource->id,
+            $tender->careerProfile,
+            $tender->margin
+        ]));
+
+        return $return;
     }
 
     /**
