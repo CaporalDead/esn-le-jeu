@@ -2,6 +2,8 @@
 
 Ce projet est maintenant arrêté après avoir servi pendant plusieurs mois, à la vue de la dégradation de l'ambiance dans la communauté du jeu ESN, nous avons décider d'arrêter la mise à jour de ce bot ne trouvant plus l'envie de le faire.
 
+Aujourd'hui le code est disponible à tous ! Si vous souhaitez forker ce projet et continuer à le maintenant allez y :).
+
 ## Lancer le bot
 
 ```
