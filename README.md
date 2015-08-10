@@ -16,7 +16,7 @@ php bin/run bot:config:generate
 ## Lancer le bot
 
 ```
-./run bot:run --config fichier --logger [phpoutput|file|mail]
+./bin/run bot:run --config fichier --logger [phpoutput|file|mail]
 ```
 
 Avec :
