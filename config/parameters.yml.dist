@@ -19,19 +19,19 @@ modules:
         - \Jhiino\ESNLeJeu\Module\Tender\Bid
 
 tenders:
-    hire: true
-    min_weeks: 6
+    hire: false
+    min_weeks: 5
     min_interest_margin: 0.22
-    trade_promotion: 0.97
-    max_bid_per_hour: 100
+    trade_promotion: 0.95
+    max_bid_per_hour: 500
 
 employees:
-    hire_employees: true
+    hire_employees: false
     hire_freelances: false
 
 audit:
     fire: false
-    max_fire_per_hour: 30
+    max_fire_per_hour: 300
     renegotiate_contracts: true
     renegotiate_type:
         very_good: true
@@ -57,7 +57,7 @@ mailer:
         - peut-etre-un-autre@email.tld
 
 logger:
-    levels: [ EMERGENCY, ALERT, CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG ]
+    levels: [ EMERGENCY, ALERT, CRITICAL, ERROR, WARNING, NOTICE, INFO ] # DEBUG
 
 development:
-    activate: false
+    activate: true
