@@ -57,7 +57,7 @@ class Bid extends Module
             $page = 1;
 
             do {
-                $body     = $this->client->get(self::URI, $careerProfile, ['C' => $careerProfile, 'P' => $page]);
+                $body     = $this->client->get(self::URI, ['C' => $careerProfile, 'P' => $page]);
                 $crawler  = new Crawler($body);
                 $children = $crawler->filter(self::CSS_FILTER);
 
