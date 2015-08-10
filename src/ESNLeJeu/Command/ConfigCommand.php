@@ -1,4 +1,6 @@
-<?php namespace Jhiino\ESNLeJeu\Command;
+<?php
+
+namespace Jhiino\ESNLeJeu\Command;
 
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
@@ -46,79 +48,83 @@ class ConfigCommand extends Command
         }
 
         $template = [
-            'account'   => [
-                'login'    => 'my-login',
-                'password' => 'my-password',
-                'esn'      => 'Le nom de mon ESN',
-                'email'    => 'mon@email.tld',
-            ],
-            'modules'   => [
-                'everytime' => [
-                    ['\Jhiino\ESNLeJeu\Module\Stat\Popularity'],
-                    ['\Jhiino\ESNLeJeu\Module\Stat\Tender'],
-                    ['\Jhiino\ESNLeJeu\Module\Stat\Stock'],
-                    ['\Jhiino\ESNLeJeu\Module\Stat\Dashboard'],
-                ],
-                'audit'     => [
-                    ['\Jhiino\ESNLeJeu\Module\Audit\FireEmployees'],
-                    ['\Jhiino\ESNLeJeu\Module\Audit\RenegociateContracts'],
-                ],
-                'flannel'   => [
-                    ['\Jhiino\ESNLeJeu\Module\Complaint\Flannel'],
-                ],
-                'business'  => [
-                    ['\Jhiino\ESNLeJeu\Module\Tender\Bid'],
-                ],
-            ],
-            'tenders'   => [
-                'hire'                => true,
-                'min_weeks'           => 6,
-                'min_interest_margin' => 0.22,
-                'trade_promotion'     => 0.97,
-                'max_bid_per_hour'    => 100,
-            ],
-            'employees' => [
-                'hire_employees'  => true,
-                'hire_freelances' => false,
-            ],
-            'audit'     => [
+            'audit'       => [
                 'fire'                  => false,
-                'max_fire_per_hour'     => 30,
-                'renegotiate_contracts' => true,
                 'renegotiate_type'      => [
-                    'very_good' => true,
-                    'good'      => true,
                     'bad'       => true,
+                    'good'      => true,
                     'very_bad'  => true,
+                    'very_good' => true,
                 ],
                 'break_type'            => [
-                    'very_good' => false,
-                    'good'      => false,
                     'bad'       => false,
+                    'good'      => false,
                     'very_bad'  => false,
+                    'very_good' => false,
+                ],
+                'max_fire_per_hour'     => 300,
+                'renegotiate_contracts' => true,
+            ],
+            'development' => [
+                'activate' => true,
+            ],
+            'account'     => [
+                'esn'      => 'Le nom de mon ESN',
+                'login'    => 'my-login',
+                'password' => 'my-password',
+                'email'    => 'mon@email.tld',
+            ],
+            'employees'   => [
+                'hire_freelances' => false,
+                'hire_employees'  => false,
+            ],
+            'modules'     => [
+                'audit'     => [
+                    '\Jhiino\ESNLeJeu\Module\Audit\FireEmployees',
+                    '\Jhiino\ESNLeJeu\Module\Audit\RenegociateContracts',
+                ],
+                'everytime' => [
+                    '\Jhiino\ESNLeJeu\Module\Stat\Popularity',
+                    '\Jhiino\ESNLeJeu\Module\Stat\Tender',
+                    '\Jhiino\ESNLeJeu\Module\Stat\Stock',
+                    '\Jhiino\ESNLeJeu\Module\Stat\Dashboard',
+                ],
+                'business'  => [
+                    '\Jhiino\ESNLeJeu\Module\Tender\Bid',
+                ],
+                'flannel'   => [
+                    '\Jhiino\ESNLeJeu\Module\Complaint\Flannel',
                 ],
             ],
-            'mailer'    => [
-                'host'       => 'smtp.gmail.com',
-                'port'       => 465,
-                'security'   => 'ssl',
+            'mailer'      => [
                 'username'   => 'my-login',
-                'password'   => 'my-password',
-                'from'       => 'mon@email.tld',
                 'from_as'    => 'ESN Le Bot',
-                'recipients' =>
-                    ['mon@email.tld', 'peut-etre-un-autre@email.tld'],
+                'from'       => 'mon@email.tld',
+                'recipients' => [
+                    'mon@email.tld',
+                    'peut-etre-un-autre@email.tld',
+                ],
+                'host'       => 'smtp.gmail.com',
+                'security'   => 'ssl',
+                'password'   => 'my-password',
+                'port'       => 465,
             ],
-            'logger'    => [
+            'tenders'     => [
+                'min_interest_margin' => 0.22,
+                'hire'                => false,
+                'min_weeks'           => 5,
+                'trade_promotion'     => 0.95,
+                'max_bid_per_hour'    => 500,
+            ],
+            'logger'      => [
                 'levels' => [
-                    'EMERGENCY',
-                    'ALERT',
-                    'CRITICAL',
-                    'ERROR',
-                    'WARNING',
-                    'NOTICE',
-                    'INFO',
-                    'DEBUG',
+                    0 => 'EMERGENCY',
+                    1 => 'ALERT',
+                    2 => 'CRITICAL',
+                    3 => 'ERROR',
+                    4 => 'WARNING',
+                    5 => 'NOTICE',
+                    6 => 'INFO',
                 ],
             ],
         ];
